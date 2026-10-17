@@ -1,0 +1,39 @@
+services:
+  aion2-timer-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aion2-timer-bot
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env
+    environment:
+      TZ: Asia/Kuala_Lumpur
+      DATABASE_PATH: /state/bot.sqlite
+      NODE_ENV: production
+    volumes:
+      - ./state:/state
+    stop_grace_period: 30s
+    # Website: reachable only from this host; Apache proxies aion2.bajubesi.org here.
+    ports:
+      - "127.0.0.1:8787:8787"
+
+  asia-status-scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aion2-asia-status-scraper
+    user: "0:0"
+    restart: unless-stopped
+    init: true
+    command:
+      - /bin/sh
+      - -c
+      - |
+        while true; do
+          python3 /opt/aion2-scraper/publish_asia_status.py || echo "Asia status scrape failed; keeping last snapshot"
+          sleep 60
+        done
+    volumes:
+      - ./state:/state

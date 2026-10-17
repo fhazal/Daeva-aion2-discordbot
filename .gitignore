@@ -1,0 +1,26 @@
+# secrets & runtime data
+.env
+**/.env
+.env.*
+!.env.example
+state/
+backups/
+*.sqlite
+*.sqlite-*
+# build output
+**/node_modules/
+**/dist/
+# patch backups & logs
+*.bak*
+*.log
+*.backup*
+*.before*
+*.pre-*
+*.orig
+*.rej
+# third-party scraper module: downloaded at Docker build time, never committed
+server-status-scraper/aion2_api.py
+server-status-scraper/app.py
+server-status-scraper/test_aion2.py
+server-status-scraper/pyproject.toml
+server-status-scraper/uv.lock

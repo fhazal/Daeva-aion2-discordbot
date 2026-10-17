@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daeva Timers</title>
+  <meta name="description" content="AION 2 timers for Beritra: Immortal Gartua respawn, Spacetime Rifts, Shugo Festival, sieges and resets, shown in your own time zone.">
+  <meta name="theme-color" content="#0b0c0f">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 4c-2.6 5.2-7.4 8-12 8.4 3.6 1.6 6 4.4 7 8.2L16 28l5-7.4c1-3.8 3.4-6.6 7-8.2-4.6-.4-9.4-3.2-12-8.4z"/></svg>
+        Daeva Timers
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="/" aria-current="page">Timers</a>
+        <a href="#players">Players</a>
+      </nav>
+      <div class="topbar-right">
+        <label>
+          <span class="visually-hidden">Region</span>
+          <select id="region" aria-label="Region"></select>
+        </label>
+        <p class="clock"><span id="clock">--:--</span> <span id="zone" class="zone"></span></p>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <p id="banner" class="banner" role="status" hidden></p>
+
+    <section class="hero">
+      <div class="hero-text">
+        <p class="pill">Aion 2 timers for Beritra</p>
+        <h1><span class="accent">Aion 2</span> timers in your own time zone.</h1>
+        <p class="lede">Immortal Gartua respawns, Spacetime Rifts, Shugo Festival, sieges and resets. Built on the same data as our Discord bot, Daeva.</p>
+      </div>
+
+      <aside id="gartua" class="overlay" aria-labelledby="gartua-title" hidden>
+        <div class="overlay-head">
+          <span class="live-dot" aria-hidden="true"></span>
+          <h2 id="gartua-title">Immortal Gartua</h2>
+          <span class="overlay-server">Beritra</span>
+        </div>
+        <div class="overlay-body">
+          <div class="bar" aria-hidden="true"><span id="gartua-bar"></span></div>
+          <div class="overlay-count">
+            <span id="gartua-count" class="big">--:--:--</span>
+            <span id="gartua-phase" class="overlay-phase"></span>
+          </div>
+          <p id="gartua-when" class="overlay-when"></p>
+        </div>
+        <div class="overlay-foot">
+          <p id="gartua-source"></p>
+          <p>Estimate only. Check the Field Boss list in-game before you fly out.</p>
+        </div>
+      </aside>
+    </section>
+
+    <section id="tiles" class="tiles" aria-label="At a glance"></section>
+
+    <section id="now-section" aria-labelledby="now-title" hidden>
+      <div class="section-head"><h2 id="now-title">Happening now</h2></div>
+      <div id="now-list" class="cards"></div>
+    </section>
+
+    <div class="columns">
+      <section class="panel" aria-labelledby="next-title">
+        <div class="panel-head"><h2 id="next-title">Coming up</h2></div>
+        <table class="table">
+          <thead><tr><th scope="col">Event</th><th scope="col">Starts</th><th scope="col" class="num">In</th></tr></thead>
+          <tbody id="next-list"></tbody>
+        </table>
+      </section>
+
+      <section id="status" class="panel" aria-labelledby="status-title" hidden>
+        <div class="panel-head">
+          <h2 id="status-title">Asia servers</h2>
+          <span id="status-updated" class="panel-meta"></span>
+        </div>
+        <table class="table">
+          <thead><tr><th scope="col">Server</th><th scope="col" class="num">Population</th><th scope="col" class="num">Status</th></tr></thead>
+          <tbody id="status-list"></tbody>
+        </table>
+      </section>
+    </div>
+    <section id="players" class="players" aria-labelledby="players-title">
+      <h2 id="players-title">Players</h2>
+      <div class="columns">
+        <section class="panel" aria-labelledby="roster-title">
+          <div class="panel-head">
+            <h2 id="roster-title">Legion roster</h2>
+            <span id="roster-count" class="panel-meta"></span>
+          </div>
+          <div class="roster-scroll"><table class="table" id="roster-table" hidden>
+            <thead><tr><th scope="col">Character</th><th scope="col">Class</th><th scope="col" class="num">Level</th><th scope="col" class="num">Combat power</th><th scope="col">Legion</th><th scope="col">Server</th><th scope="col" class="num">Links</th></tr></thead>
+            <tbody id="roster-list"></tbody>
+          </table></div>
+          <p id="roster-empty" class="panel-empty" hidden>No one has joined yet. Use <code>/profile set</code> in our Discord to add your character.</p>
+        </section>
+
+        <section class="panel find" aria-labelledby="find-title">
+          <div class="panel-head"><h2 id="find-title">Find a player</h2></div>
+          <form id="find-form" class="find-form">
+            <label for="find-name">Character name</label>
+            <div class="find-row">
+              <input id="find-name" name="name" type="text" autocomplete="off" spellcheck="false" maxlength="24" placeholder="e.g. Bajubesi" required>
+              <button type="submit">Search players</button>
+            </div>
+            <p id="find-note" class="find-note">Look up anyone on Aion2Timers. Opens in a new tab, with the name copied so you can paste it straight in.</p>
+          </form>
+          <div class="find-help">
+            <h3>Join the roster</h3>
+            <p>In our Discord, run <code>/profile set</code> with your character name. Daeva finds your character, reads your class, level and legion, and adds you here. Remove yourself any time with <code>/profile remove</code>.</p>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="features" aria-labelledby="features-title">
+      <h2 id="features-title">What Daeva Timers does</h2>
+      <div class="feature-grid">
+        <div class="feature"><h3>Gartua respawn</h3><p>A live estimate from Aion2Timers kill reports, with a fallback our trusted members set in Discord.</p></div>
+        <div class="feature"><h3>Your own time zone</h3><p>Every time on the page is shown in your device's local time. No more converting.</p></div>
+        <div class="feature"><h3>Rifts and Shugo</h3><p>The next Spacetime Rift and Shugo Festival at a glance, counting down to the second.</p></div>
+        <div class="feature"><h3>Sieges and resets</h3><p>Artifact Siege, Arena of Tactics, and the daily and weekly resets, all in one list.</p></div>
+        <div class="feature"><h3>Server status</h3><p>Online state and population for Beritra and every other Asia server, checked every minute.</p></div>
+        <div class="feature"><h3>Discord alerts</h3><p>Daeva posts live panels and spawn pings in our Discord, from exactly the same data.</p></div>
+      </div>
+    </section>
+
+    <section class="faq" aria-labelledby="faq-title">
+      <h2 id="faq-title">Questions</h2>
+      <dl class="faq-list">
+        <div><dt>Is it free?</dt><dd>Yes. No account, no ads, no download.</dd></div>
+        <div><dt>How accurate is the Gartua timer?</dt><dd>It is an estimate. We use Aion2Timers kill reports when they are fresh, otherwise the last time a trusted member set in Discord. Always check the Field Boss list in-game.</dd></div>
+        <div><dt>Why do my times differ from a friend's?</dt><dd>Each visitor sees times in their own device's time zone, so the clock times differ but the countdowns match.</dd></div>
+        <div><dt>Which regions are covered?</dt><dd>Asia is our home, so Gartua and server status are Asia only. Event schedules for the other regions are in the region menu.</dd></div>
+        <div><dt>How do I get alerts?</dt><dd>Join our Discord. Daeva posts Gartua and event alerts there, and you can choose which roles get pinged.</dd></div>
+        <div><dt>Why am I on the legion roster?</dt><dd>Only members who added themselves with <code>/profile set</code> appear, and <code>/profile remove</code> takes you off straight away. We only show what you entered, with links to your official and Armory pages.</dd></div>
+        <div><dt>Who runs this?</dt><dd>The Bajubesi Network community. It is an independent project, not affiliated with NCSOFT.</dd></div>
+      </dl>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-about">
+        <p class="footer-brand">Daeva Timers</p>
+        <p>A community tool for keeping track of AION 2 timers on Beritra. Use it to plan your evening, not to argue over a spawn.</p>
+        <p class="footer-motto">A timer tells you when to look, not what you will find. Be kind at the spawn point.</p>
+      </div>
+      <nav class="footer-links" aria-labelledby="connect-title">
+        <p id="connect-title" class="footer-heading">Connect</p>
+        <ul>
+          <li><a href="https://discord.gg/TCmm8cH3GE"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-4 3.5V16H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg>Discord</a></li>
+          <li><a href="https://ko-fi.com/bajubesi"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h11v5a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5V8z"/><path d="M16 9.5h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M9.2 3.5c-.6.8.6 1.4 0 2.3M12.2 3.5c-.6.8.6 1.4 0 2.3"/></svg>Support us on Ko-fi</a></li>
+          <li><a href="https://bajubesi.org/"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.2 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.2-3.5-8.5s1.1-6.1 3.5-8.5z"/></svg>Bajubesi Network</a></li>
+          <li><a href="https://www.aion2timers.com/"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Aion2Timers</a></li>
+        </ul>
+      </nav>
+    </div>
+    <p class="footer-legal">Daeva Timers is an independent community project. Not affiliated with, endorsed by, or connected to NCSOFT or AION 2 in any way.</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,46 @@
+--- a/aion2_api.py
++++ b/aion2_api.py
+@@ -609,22 +609,20 @@
+             raise Aion2ApiError(0, self.url, "no server table found on the page")
+ 
+         columns = [_cell_text(c) for c in parser.headers]
++        idx = {c: i for i, c in enumerate(columns)}
+         try:
+-            idx = {c: i for i, c in enumerate(columns)}
+             i_name, i_status = idx["Server"], idx["Status"]
+             i_faction, i_region = idx["Faction"], idx["Region"]
+-            i_pop, i_cur, i_max, i_queue = (
+-                idx["Population"],
+-                idx["Current"],
+-                idx["Max"],
+-                idx["Queue"],
+-            )
++            i_pop = idx.get("Population")
++            i_cur = idx.get("Current")
++            i_max = idx.get("Max")
++            i_queue = idx.get("Queue")
+         except KeyError as exc:
+             raise Aion2ApiError(0, self.url, f"unexpected table columns: {columns}") from exc
+ 
+         out: List[Dict[str, Any]] = []
+         for row in parser.rows:
+-            if len(row) <= max(idx.values()):
++            if len(row) <= max(i_name, i_status, i_faction, i_region):
+                 continue
+ 
+             frags = row[i_name]["frags"]
+@@ -638,10 +636,10 @@
+                 "status": _cell_text(row[i_status]),
+                 "faction": _cell_text(row[i_faction]),
+                 "region": _cell_text(row[i_region]),
+-                "population_percent": row[i_pop]["width"],
+-                "current": _to_int(_cell_text(row[i_cur])),
+-                "max": _to_int(_cell_text(row[i_max])),
+-                "queue": _to_int(_cell_text(row[i_queue])),
++                "population_percent": row[i_pop]["width"] if i_pop is not None and i_pop < len(row) else None,
++                "current": _to_int(_cell_text(row[i_cur])) if i_cur is not None and i_cur < len(row) else None,
++                "max": _to_int(_cell_text(row[i_max])) if i_max is not None and i_max < len(row) else None,
++                "queue": _to_int(_cell_text(row[i_queue])) if i_queue is not None and i_queue < len(row) else None,
+                 "badges": [f["title"] for f in frags if f["title"]],
+                 "note": note,
+             }
