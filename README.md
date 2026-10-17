@@ -171,7 +171,7 @@ Daeva reads public data from other services. If you run your own copy, please ke
 - **NCSOFT character search:** used only when a member runs `/profile` for their own character, with caching and a per-user cooldown. Daeva never crawls or bulk-collects player data.
 - **Aion2Timers feed:** used for Gartua timing, cached for 60 seconds.
 - **Server status:** read through axsddlr's aion2_api, once a minute.
-- **gaming.tools data and icons:** fetched with permission under the `DaevaBot/2` User-Agent that gaming.tools has allowed through Cloudflare. The two data files are checked once a day; each icon is downloaded once, with a pause between downloads, and the download stops after five failures in a row. If you run your own copy, ask gaming.tools for your own allowance rather than reusing ours.
+- **gaming.tools data and icons:** fetched with permission under the `DaevaBot/2` User-Agent that gaming.tools has allowed through Cloudflare. The three data files (NPCs, skills, activities) are checked once a day; each icon is downloaded once, with a pause between downloads, and the download stops after five failures in a row. If you run your own copy, ask gaming.tools for your own allowance rather than reusing ours.
 
 ---
 

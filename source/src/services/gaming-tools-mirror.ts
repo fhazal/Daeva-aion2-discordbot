@@ -15,7 +15,9 @@ const IMAGE_SOURCE = "https://cdn-hosted.gaming.tools/aion2";
 const CLASS_CODES = ["gladiator", "templar", "assassin", "ranger", "sorcerer", "elementalist", "cleric", "chanter"];
 const IMAGE_DELAY_MS = 300;
 const SAFE_PATH = /^\/images\/[A-Za-z0-9_./-]+\.(webp|png)$/;
-export const MIRROR_FILES = ["npcs.d.json", "skills.d.json"] as const;
+// activities.d.json carries the event/content artwork (field events, boss
+// portraits, markers) that Daeva Meter shows in its event line and alerts.
+export const MIRROR_FILES = ["npcs.d.json", "skills.d.json", "activities.d.json"] as const;
 const REFRESH_MS = 24 * 60 * 60 * 1000;
 const RETRY_MS = 30 * 60 * 1000;
 const USER_AGENT = "DaevaBot/2 (+https://aion2.bajubesi.org/; Daeva Meter name mirror)";
@@ -151,7 +153,9 @@ export function startGamingToolsMirror(): () => void {
   let stopped = false;
   const run = async () => {
     const meta = await readMeta();
-    const due = !meta.checkedAt || Date.now() - meta.checkedAt > REFRESH_MS;
+    // Also refresh straight away when a listed file is missing (newly added).
+    const missing = (await Promise.all(MIRROR_FILES.map((f) => exists(join(mirrorDir(), f))))).some((x) => !x);
+    const due = missing || !meta.checkedAt || Date.now() - meta.checkedAt > REFRESH_MS;
     const ok = due ? await refresh() : true;
     void syncImages(() => stopped);
     if (!stopped) timer = setTimeout(() => void run(), ok ? 60 * 60 * 1000 : RETRY_MS);
