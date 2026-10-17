@@ -18,7 +18,7 @@ const SAFE_PATH = /^\/images\/[A-Za-z0-9_./-]+\.(webp|png)$/;
 export const MIRROR_FILES = ["npcs.d.json", "skills.d.json"] as const;
 const REFRESH_MS = 24 * 60 * 60 * 1000;
 const RETRY_MS = 30 * 60 * 1000;
-const USER_AGENT = "DaevaBot/2 (+https://aion2.bajubesi.org; Daeva Meter name mirror)";
+const USER_AGENT = "DaevaBot/2 (+https://aion2.bajubesi.org/; Daeva Meter name mirror)";
 
 export function mirrorDir(): string {
   return join(dirname(process.env.DATABASE_PATH ?? "/state/bot.sqlite"), "gaming-tools");
