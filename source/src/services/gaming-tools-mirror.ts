@@ -105,6 +105,7 @@ async function syncImages(isStopped: () => boolean): Promise<void> {
   imagesRunning = true;
   let fetched = 0;
   let failed = 0;
+  let inARow = 0;
   try {
     for (const path of await wantedImages()) {
       if (isStopped()) return;
@@ -118,8 +119,14 @@ async function syncImages(isStopped: () => boolean): Promise<void> {
         await writeFile(`${target}.tmp`, buf);
         await rename(`${target}.tmp`, target);
         fetched++;
+        inARow = 0;
       } catch {
         failed++;
+        // Blocked (e.g. Cloudflare challenge): stop and try again next run.
+        if (++inARow >= 5) {
+          logger.warn({ fetched, failed }, "gaming.tools icons blocked; pausing until next run");
+          return;
+        }
       }
       await new Promise((r) => setTimeout(r, IMAGE_DELAY_MS));
     }
