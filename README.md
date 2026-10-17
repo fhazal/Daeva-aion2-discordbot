@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="source/assets/shugo-mascot.png" alt="Daeva mascot" width="340">
+<img src="source/assets/daeva-mascot.png" alt="Daeva mascot" width="340">
 
 # Daeva
 
