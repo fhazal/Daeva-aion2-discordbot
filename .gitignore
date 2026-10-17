@@ -24,3 +24,7 @@ server-status-scraper/app.py
 server-status-scraper/test_aion2.py
 server-status-scraper/pyproject.toml
 server-status-scraper/uv.lock
+
+# Python bytecode
+__pycache__/
+*.pyc
