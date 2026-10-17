@@ -171,7 +171,7 @@ Daeva reads public data from other services. If you run your own copy, please ke
 - **NCSOFT character search:** used only when a member runs `/profile` for their own character, with caching and a per-user cooldown. Daeva never crawls or bulk-collects player data.
 - **Aion2Timers feed:** used for Gartua timing, cached for 60 seconds.
 - **Server status:** read through axsddlr's aion2_api, once a minute.
-- **gaming.tools data and icons:** fetched with permission under the `DaevaBot/2` User-Agent that gaming.tools has allowed through Cloudflare. The three data files (NPCs, skills, activities) are checked once a day; each icon is downloaded once, with a pause between downloads, and the download stops after five failures in a row. If you run your own copy, ask gaming.tools for your own allowance rather than reusing ours.
+- **gaming.tools data and icons:** refreshed once a day and served from our own server.
 
 ---
 
@@ -179,7 +179,7 @@ Daeva reads public data from other services. If you run your own copy, please ke
 
 - **[kectx/aion2-discord-bot](https://github.com/kectx/aion2-discord-bot)** is the foundation Daeva grew from (MIT, licence kept in [`source/LICENSE`](source/LICENSE)).
 - **[axsddlr/aion2_api](https://github.com/axsddlr/aion2_api)** powers the server-status data. That project has no licence file, so its code is **not included** here. The Docker build downloads it from upstream at a pinned commit, verifies its checksum, and applies a small patch ([`aion2_api-optional-columns.patch`](server-status-scraper/aion2_api-optional-columns.patch)).
-- **[AION 2 Global Database](https://aion2.gaming.tools)** by the **gaming.tools** team supplies the monster and skill names and icons that Daeva mirrors for [Daeva Meter](https://github.com/fhazal/DAEVA-dps-meter) (`/api/gt`). Used with the kind permission of its admin: Daeva downloads each file once (data refreshed daily, never hotlinked) and serves it from our own server. Thank you!
+- **[AION 2 Global Database](https://aion2.gaming.tools/)** by the gaming.tools team supplies the monster and skill names and icons that Daeva mirrors for [Daeva Meter](https://github.com/fhazal/DAEVA-dps-meter) (`/api/gt`). Used with the kind permission of its admin, Thank you!
 - **[Aion2Timers](https://www.aion2timers.com)** provides the community-reported Gartua kill times behind the live Gartua estimate; `/gartua set` remains the manual fallback.
 - Daeva's own additions and changes are released under the [MIT licence](LICENSE).
 
