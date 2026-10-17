@@ -8,6 +8,7 @@ import { logger } from "../lib/logger.js";
 import { listPublicRoster } from "../persistence/roster.js";
 import { getGartuaStore } from "../persistence/store.js";
 import { getCachedLiveGartuaEstimate } from "../services/live-gartua.js";
+import { readMirrored, readMirroredImage } from "../services/gaming-tools-mirror.js";
 
 /**
  * Daeva web — read-only timers site for aion2.bajubesi.org.
@@ -281,6 +282,30 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
       return;
     }
     sendJson(res, 200, body, head);
+    return;
+  }
+
+  if (url.pathname.startsWith("/api/gt/img/")) {
+    // Icons downloaded once from gaming.tools (they asked: no hotlinking).
+    const rel = url.pathname.slice("/api/gt/img".length);
+    const body = await readMirroredImage(rel);
+    if (!body) {
+      send(res, 404, "text/plain; charset=utf-8", "Not found", head, "no-store");
+      return;
+    }
+    const type = rel.endsWith(".png") ? "image/png" : "image/webp";
+    send(res, 200, type, body, head, "public, max-age=604800");
+    return;
+  }
+
+  if (url.pathname.startsWith("/api/gt/")) {
+    // Daily mirror of the gaming.tools name files for Daeva Meter.
+    const body = await readMirrored(url.pathname.slice("/api/gt/".length));
+    if (!body) {
+      sendJson(res, 404, JSON.stringify({ error: "Not mirrored yet" }), head);
+      return;
+    }
+    send(res, 200, "application/json; charset=utf-8", body, head, "public, max-age=3600");
     return;
   }
 

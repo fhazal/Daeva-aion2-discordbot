@@ -6,11 +6,13 @@ import { closeDatabase } from "./persistence/db.js";
 import { initGuildStore } from "./persistence/store.js";
 import { startWebServer } from "./web/server.js";
 import { startRosterRefresh } from "./services/legion.js";
+import { startGamingToolsMirror } from "./services/gaming-tools-mirror.js";
 
 async function main(): Promise<void> {
   const env = loadEnv();
   initGuildStore(env.DATABASE_PATH);
   const stopWeb = startWebServer();
+  const stopMirror = startGamingToolsMirror();
   let stopRoster: (() => void) | null = null;
 
   const { client, startBackgroundJobs } = await createClient();
@@ -27,6 +29,7 @@ async function main(): Promise<void> {
     stoppers?.stopServers();
     stoppers?.stopServerStatusCleanup();
     stopWeb();
+    stopMirror();
     stopRoster?.();
     client.destroy();
     closeDatabase();
