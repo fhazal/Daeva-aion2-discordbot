@@ -66,6 +66,8 @@ export async function ingestUpload(
   now = Date.now(),
 ): Promise<IngestResult> {
   if (!isObj(body)) return bad("Body must be a JSON object");
+  // The meter's "Test connection" button: the token was already checked.
+  if (body.type === "ping") return ok(0);
   if (body.type === "loot") return ignored("Loot isn't collected yet");
   if (body.type !== "fight") return bad("Unknown upload type");
   if (body.demo === true) return ignored("Demo fight");

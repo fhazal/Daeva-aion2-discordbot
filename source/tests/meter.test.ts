@@ -61,6 +61,12 @@ describe("ingestUpload", () => {
     expect(f[0]?.rank).toBe("Legendary");
   });
 
+  it("answers the meter's connection test", async () => {
+    createLink("u1", NOW);
+    const r = await ingestUpload("u1", { type: "ping" }, rankOf, NOW);
+    expect(r.status).toBe(200);
+  });
+
   it("ignores demo, short, common and unknown monsters", async () => {
     createLink("u1", NOW);
     const me = [{ name: "BajuBesi", dmg: 1000, is_self: true }];
