@@ -376,13 +376,7 @@ async function getLatency(target: ProbeTarget): Promise<LatencyReading | undefin
   };
 }
 
-export async function getAsiaStatus(
-  forceRefresh = false,
-): Promise<AsiaStatusSnapshot> {
-  if (!forceRefresh && cached && Date.now() - cachedAt < 45_000) {
-    return cached;
-  }
-
+async function fetchAion2ToolsSnapshot(): Promise<AsiaStatusSnapshot> {
   const response = await fetch(API_URL, {
     headers: { Accept: "application/json" },
     signal: AbortSignal.timeout(15_000),
@@ -440,8 +434,53 @@ export async function getAsiaStatus(
         typeof item.title === "string",
     ),
   };
+  return snapshot;
+}
+
+export async function getAsiaStatus(
+  forceRefresh = false,
+): Promise<AsiaStatusSnapshot> {
+  if (!forceRefresh && cached && Date.now() - cachedAt < 45_000) {
+    return cached;
+  }
+
+  // aion2.tools supplies the roster and maintenance notices; our own
+  // gaming.tools snapshot supplies the live server status. If aion2.tools is
+  // down, keep its last known roster/notices (or none) and still show the
+  // live status, instead of reporting the whole board as unavailable.
+  let snapshot: AsiaStatusSnapshot;
+  let rosterError: unknown;
+  try {
+    snapshot = await fetchAion2ToolsSnapshot();
+  } catch (error) {
+    rosterError = error;
+    logger.warn({ err: error }, "aion2.tools roster unavailable; using gaming.tools status only");
+    // Last known roster and notices (the live part is refreshed below).
+    snapshot = cached
+      ? {
+          region: cached.region,
+          observedAt: cached.observedAt,
+          worldState: cached.worldState,
+          rosterState: cached.rosterState,
+          noticesState: cached.noticesState,
+          servers: cached.servers,
+          notices: cached.notices,
+        }
+      : {
+          region: "as",
+          observedAt: new Date().toISOString(),
+          worldState: "unavailable",
+          rosterState: "unavailable",
+          noticesState: "unavailable",
+          servers: [],
+          notices: [],
+        };
+  }
 
   const liveStatus = await getGamingToolsAsiaStatus();
+  if (rosterError && !liveStatus.servers.length) {
+    throw rosterError;
+  }
   snapshot.worldState = liveStatus.state;
   snapshot.liveSummary = liveStatus.summary;
   snapshot.liveServers = liveStatus.servers;
