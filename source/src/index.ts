@@ -7,6 +7,7 @@ import { initGuildStore } from "./persistence/store.js";
 import { startWebServer } from "./web/server.js";
 import { startRosterRefresh } from "./services/legion.js";
 import { startGamingToolsMirror } from "./services/gaming-tools-mirror.js";
+import { startMeterDaily } from "./services/meter-daily.js";
 
 async function main(): Promise<void> {
   const env = loadEnv();
@@ -14,6 +15,7 @@ async function main(): Promise<void> {
   const stopWeb = startWebServer();
   const stopMirror = startGamingToolsMirror();
   let stopRoster: (() => void) | null = null;
+  let stopMeter: (() => void) | null = null;
 
   const { client, startBackgroundJobs } = await createClient();
   let stoppers: ReturnType<typeof startBackgroundJobs> | null = null;
@@ -31,6 +33,7 @@ async function main(): Promise<void> {
     stopWeb();
     stopMirror();
     stopRoster?.();
+    stopMeter?.();
     client.destroy();
     closeDatabase();
     process.exit(0);
@@ -41,6 +44,7 @@ async function main(): Promise<void> {
 
   client.once("clientReady", () => {
     stopRoster = startRosterRefresh(client);
+    stopMeter = startMeterDaily(client);
   });
 
   await client.login(env.DISCORD_TOKEN);

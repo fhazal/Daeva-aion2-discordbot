@@ -23,6 +23,7 @@
       <nav class="nav" aria-label="Main">
         <a href="#timers" aria-current="page">Timers</a>
         <a href="#servers">Servers</a>
+        <a href="#board">DPS</a>
         <a href="#legion">Legion</a>
         <a href="#meter">Daeva Meter</a>
         <a href="#faq">FAQ</a>
@@ -81,16 +82,46 @@
       </div>
     </section>
 
-    <section class="section split">
-      <div class="card box" id="servers" aria-labelledby="status-title">
-        <div class="box-head"><h2 id="status-title">Server status</h2><span id="status-updated" class="sub"></span></div>
+    <section class="section board" id="board" aria-label="Servers, DPS and players">
+      <div class="card box c-sv" id="servers" aria-labelledby="status-title">
+        <div class="box-head"><div class="hh"><span class="hi" data-icon="server"></span><h2 id="status-title">Server status</h2></div><span id="status-updated" class="sub"></span></div>
         <p class="sub" id="status-sub">Asia servers · checked every minute</p>
         <div id="status-list"></div>
         <p id="status-empty" class="empty" hidden>Server status isn't available right now.</p>
+        <div class="sv-legend" aria-label="Icon legend">
+          <span><span class="ni ok" data-icon="circle-check"></span>Open</span>
+          <span><span class="ni lock" data-icon="lock"></span>Creation blocked</span>
+          <span><span class="ni new" data-icon="badge-plus"></span>New server</span>
+          <span><span class="ni mnt" data-icon="wrench"></span>Maintenance</span>
+          <span><span class="ni off" data-icon="power-off"></span>Offline</span>
+        </div>
       </div>
 
-      <div class="card box" aria-labelledby="find-title">
-        <div class="box-head"><h2 id="find-title">Players</h2></div>
+      <div class="card box c-dps" aria-labelledby="dps-title">
+        <div class="box-head"><div class="hh"><span class="hi" data-icon="trophy"></span><h2 id="dps-title">Highest DPS today</h2></div><span id="dps-since" class="sub sm"></span></div>
+        <p class="sub">Best boss or elite fight per player</p>
+        <div id="dps-list" class="rows"></div>
+        <div id="dps-join" class="dps-join" hidden>
+          <p id="dps-join-lead">No fights shared yet today. Be the first:</p>
+          <ol>
+            <li><span class="sn">1</span><div><b>Get Daeva Meter</b><span>Free for Windows, from our GitHub</span></div></li>
+            <li><span class="sn">2</span><div><b>Run <code>/meter link</code></b><span>In our Discord, for your private token</span></div></li>
+            <li><span class="sn">3</span><div><b>Paste it into the meter</b><span>Settings → Share with Daeva bot</span></div></li>
+          </ol>
+          <a class="btn sm" href="https://github.com/fhazal/DAEVA-dps-meter/releases/latest"><span class="ic" data-icon="download"></span>Download Daeva Meter</a>
+        </div>
+        <p id="dps-foot" class="foot-note">Link your meter with <code>/meter link</code> to appear here.</p>
+      </div>
+
+      <div class="card box c-cls" aria-labelledby="cls-title">
+        <div class="box-head"><div class="hh"><span class="hi" data-icon="signal"></span><h2 id="cls-title">Class DPS today</h2></div><span id="cls-count" class="sub sm"></span></div>
+        <p class="sub">Average per class in boss and elite fights</p>
+        <div id="cls-list" class="rows"></div>
+        <div class="legend"><span><i></i>Average</span><span><u></u>Best fight</span></div>
+      </div>
+
+      <div class="card box c-pl" aria-labelledby="find-title">
+        <div class="box-head"><div class="hh"><span class="hi" data-icon="users"></span><h2 id="find-title">Players</h2></div></div>
         <p class="sub">Look anyone up, or add yourself to our roster.</p>
         <form id="find-form" class="find first">
           <label for="find-name">Find any player</label>
@@ -156,6 +187,7 @@
         <div class="q"><dt>Which regions are covered?</dt><dd>Asia is our home, so Gartua and server status are Asia only. Event schedules for the other regions are in the region menu.</dd></div>
         <div class="q"><dt>How do I get alerts?</dt><dd>Join our Discord. Daeva posts Gartua and event alerts there, and you choose which roles get pinged.</dd></div>
         <div class="q"><dt>Why am I on the legion roster?</dt><dd>Only members who added themselves with <code>/profile set</code> appear, and <code>/profile remove</code> takes you off straight away.</dd></div>
+        <div class="q"><dt>How do I get on the DPS boards?</dt><dd>Run <code>/meter link</code> in our Discord and paste the token into Daeva Meter (Settings → Share with Daeva bot). Your boss and elite fights then appear on the boards. <code>/meter unlink</code> removes you.</dd></div>
         <div class="q"><dt>What is Daeva Meter?</dt><dd>A free Windows damage meter for AION 2 from the same community. It reads network traffic only and never touches the game client.</dd></div>
         <div class="q"><dt>Who runs this?</dt><dd>The Bajubesi Network community. It's an independent project, not affiliated with NCSOFT.</dd></div>
       </dl>
@@ -169,7 +201,7 @@
           <a class="brand" href="/"><img class="brand-mark" src="/logo.svg" alt="" width="34" height="34"><span><b>Daeva</b> Timers</span></a>
           <p>A community tool for planning around AION 2 timers on Beritra. A timer tells you when to look, not what you'll find. Be kind at the spawn point.</p>
         </div>
-        <div><h4>Timers</h4><a href="#timers">Events</a><a href="#schedule">Full schedule</a><a href="#servers">Server status</a></div>
+        <div><h4>Timers</h4><a href="#timers">Events</a><a href="#schedule">Full schedule</a><a href="#servers">Server status</a><a href="#board">DPS today</a></div>
         <div><h4>Community</h4><a href="https://discord.gg/TCmm8cH3GE">Discord</a><a href="#legion">Legion roster</a><a href="https://bajubesi.org/">Bajubesi Network</a><a href="https://ko-fi.com/bajubesi">Support us on Ko-fi</a></div>
         <div><h4>Tools</h4><a href="https://github.com/fhazal/DAEVA-dps-meter/releases/latest">Daeva Meter</a><a href="https://github.com/fhazal/Daeva-aion2-discordbot">Daeva bot</a><a href="https://www.aion2timers.com/">Aion2Timers</a></div>
       </div>

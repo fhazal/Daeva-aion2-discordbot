@@ -9,6 +9,10 @@ import { listPublicRoster } from "../persistence/roster.js";
 import { getGartuaStore } from "../persistence/store.js";
 import { getCachedLiveGartuaEstimate } from "../services/live-gartua.js";
 import { readMirrored, readMirroredImage } from "../services/gaming-tools-mirror.js";
+import { userForToken } from "../persistence/meter.js";
+import { dpsTodayJson } from "../services/meter-daily.js";
+import { allowUpload, ingestUpload } from "../services/meter-ingest.js";
+import { npcRank } from "../services/npc-ranks.js";
 
 /**
  * Daeva web — read-only timers site for aion2.bajubesi.org.
@@ -259,8 +263,106 @@ async function serveStatic(pathname: string, res: ServerResponse, head: boolean)
   }
 }
 
+// ---------- Daeva Meter uploads ----------
+
+const METER_ORIGINS = new Set(["http://tauri.localhost", "https://tauri.localhost"]);
+const MAX_UPLOAD_BYTES = 256 * 1024;
+
+function meterCors(req: IncomingMessage): Record<string, string> {
+  const origin = req.headers.origin;
+  if (!origin || !METER_ORIGINS.has(origin)) return {};
+  return {
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Max-Age": "86400",
+    Vary: "Origin",
+  };
+}
+
+function readBody(req: IncomingMessage, limit: number): Promise<string | null> {
+  return new Promise((resolve, reject) => {
+    let size = 0;
+    const chunks: Buffer[] = [];
+    req.on("data", (chunk: Buffer) => {
+      size += chunk.length;
+      if (size > limit) {
+        resolve(null);
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+    req.on("error", reject);
+  });
+}
+
+async function handleMeterUpload(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const cors = meterCors(req);
+  const reply = (status: number, body: unknown) => {
+    const text = JSON.stringify(body);
+    res.writeHead(status, {
+      ...SECURITY_HEADERS,
+      ...cors,
+      "Content-Type": "application/json; charset=utf-8",
+      "Content-Length": Buffer.byteLength(text),
+      "Cache-Control": "no-store",
+    });
+    res.end(text);
+  };
+
+  if (req.method === "OPTIONS") {
+    res.writeHead(204, { ...cors, "Cache-Control": "no-store" });
+    res.end();
+    return;
+  }
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST, OPTIONS");
+    reply(405, { ok: false, error: "Use POST" });
+    return;
+  }
+
+  const auth = req.headers.authorization ?? "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  const userId = token ? userForToken(token) : null;
+  if (!userId) {
+    reply(401, { ok: false, error: "Missing or unknown token. Get one with /meter link in our Discord." });
+    return;
+  }
+  if (!allowUpload(userId)) {
+    reply(429, { ok: false, error: "Too many uploads. Try again later." });
+    return;
+  }
+  if (!(req.headers["content-type"] ?? "").includes("application/json")) {
+    reply(415, { ok: false, error: "Send JSON" });
+    return;
+  }
+
+  const raw = await readBody(req, MAX_UPLOAD_BYTES);
+  if (raw == null) {
+    reply(413, { ok: false, error: "Upload too large" });
+    return;
+  }
+  let body: unknown;
+  try {
+    body = JSON.parse(raw);
+  } catch {
+    reply(400, { ok: false, error: "Invalid JSON" });
+    return;
+  }
+
+  const result = await ingestUpload(userId, body, npcRank);
+  if (result.status >= 400) logger.info({ userId, status: result.status, error: result.body.error }, "Daeva Meter upload refused");
+  reply(result.status, result.body);
+}
+
 async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const method = req.method ?? "GET";
+  if ((req.url ?? "").split("?")[0] === "/api/meter") {
+    await handleMeterUpload(req, res);
+    return;
+  }
   if (method !== "GET" && method !== "HEAD") {
     res.setHeader("Allow", "GET, HEAD");
     send(res, 405, "text/plain; charset=utf-8", "Method not allowed", false, "no-store");
@@ -306,6 +408,11 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
       return;
     }
     send(res, 200, "application/json; charset=utf-8", body, head, "public, max-age=3600");
+    return;
+  }
+
+  if (url.pathname === "/api/dps-today") {
+    sendJson(res, 200, dpsTodayJson(), head);
     return;
   }
 

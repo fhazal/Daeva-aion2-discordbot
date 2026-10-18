@@ -31,7 +31,13 @@
   "external-link": "<path d=\"M15 3h6v6\" /><path d=\"M10 14 21 3\" /><path d=\"M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6\" />",
   "circle-alert": "<circle cx=\"12\" cy=\"12\" r=\"10\" /><line x1=\"12\" x2=\"12\" y1=\"8\" y2=\"12\" /><line x1=\"12\" x2=\"12.01\" y1=\"16\" y2=\"16\" />",
   "coffee": "<path d=\"M10 2v2\" /><path d=\"M14 2v2\" /><path d=\"M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1\" /><path d=\"M6 2v2\" />",
-  "user-plus": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\" /><circle cx=\"9\" cy=\"7\" r=\"4\" /><line x1=\"19\" x2=\"19\" y1=\"8\" y2=\"14\" /><line x1=\"22\" x2=\"16\" y1=\"11\" y2=\"11\" />"
+  "user-plus": "<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\" /><circle cx=\"9\" cy=\"7\" r=\"4\" /><line x1=\"19\" x2=\"19\" y1=\"8\" y2=\"14\" /><line x1=\"22\" x2=\"16\" y1=\"11\" y2=\"11\" />",
+  "signal": "<path d=\"M2 20h.01\" /><path d=\"M7 20v-4\" /><path d=\"M12 20v-8\" /><path d=\"M17 20V8\" /><path d=\"M22 4v16\" />",
+  "lock": "<rect width=\"18\" height=\"11\" x=\"3\" y=\"11\" rx=\"2\" ry=\"2\" /><path d=\"M7 11V7a5 5 0 0 1 10 0v4\" />",
+  "badge-plus": "<path d=\"M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z\" /><line x1=\"12\" x2=\"12\" y1=\"8\" y2=\"16\" /><line x1=\"8\" x2=\"16\" y1=\"12\" y2=\"12\" />",
+  "wrench": "<path d=\"M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z\" />",
+  "power-off": "<path d=\"M18.36 6.64A9 9 0 0 1 20.77 15\" /><path d=\"M6.16 6.16a9 9 0 1 0 12.68 12.68\" /><path d=\"M12 2v4\" /><path d=\"m2 2 20 20\" />",
+  "circle-check": "<circle cx=\"12\" cy=\"12\" r=\"10\" /><path d=\"m16 9-5.5 5.5L8 12\" />",
   };
 
   // Original line-art class glyphs (16x16), shared with Daeva Meter.
@@ -447,6 +453,27 @@
     }));
   }
 
+  // One or two icons per server: open, creation blocked, new, maintenance or offline.
+  function stateIcons(x) {
+    const box = el("span", "state");
+    const put = (name, kind, label) => {
+      const i = icon(name, `ni ${kind}`);
+      i.title = label;
+      i.setAttribute("role", "img");
+      i.setAttribute("aria-label", label);
+      box.append(i);
+    };
+    const note = x.note || "";
+    if (x.status === "Offline") put("power-off", "off", note || "Offline");
+    else if (x.status === "Maintenance") put("wrench", "mnt", note || "Under maintenance");
+    else {
+      if (/new server/i.test(note)) put("badge-plus", "new", note);
+      if (/creation blocked|blocked/i.test(note)) put("lock", "lock", note);
+      if (!box.firstChild) put("circle-check", "ok", note || "Online · open for new characters");
+    }
+    return box;
+  }
+
   function renderStatus() {
     const s = data.status;
     const rows = s && s.servers.length ? s.servers : [];
@@ -470,7 +497,7 @@
         fill.dataset.level = pct >= 80 ? "busy" : pct < 45 ? "low" : "normal";
       }
       pop.append(fill);
-      row.append(dot, el("b", null, x.name), pop, el("span", "pct", pct != null ? `${Math.round(pct)}%` : "–"), el("span", "state", x.note || x.status));
+      row.append(dot, el("b", null, x.name), pop, el("span", "pct", pct != null ? `${Math.round(pct)}%` : "–"), stateIcons(x));
       return row;
     }));
     els.statusUpdated.textContent = s && s.fetchedAt ? `Checked ${ago(now() - Date.parse(s.fetchedAt))}` : "";
@@ -601,6 +628,76 @@
     }
   }
 
+  /* DPS today (shared from Daeva Meter) -------------------------------------- */
+
+  const DPS_REFRESH_MS = 60_000;
+  const dps = {
+    list: $("dps-list"), join: $("dps-join"), lead: $("dps-join-lead"), foot: $("dps-foot"), since: $("dps-since"),
+    cls: $("cls-list"), count: $("cls-count"),
+  };
+  const ALL_CLASSES = ["Gladiator", "Templar", "Assassin", "Ranger", "Sorcerer", "Elementalist", "Cleric", "Chanter"];
+  const JOIN_BELOW = 6;
+
+  function shortNum(n) {
+    if (n >= 1e6) return `${(n / 1e6).toFixed(n >= 1e7 ? 1 : 2)}M`;
+    if (n >= 1e4) return `${(n / 1e3).toFixed(1)}k`;
+    return Math.round(n).toLocaleString();
+  }
+  function mmss(sec) {
+    return `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, "0")}`;
+  }
+
+  async function loadDps() {
+    try {
+      const res = await fetch("/api/dps-today", { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const b = await res.json();
+      dps.since.textContent = `since ${timeFmt.format(new Date(b.startsAt))} reset`;
+      dps.count.textContent = b.fights === 1 ? "1 fight" : `${b.fights} fights`;
+
+      // Few players so far: show how to join underneath, so the card stays full.
+      dps.list.hidden = b.top.length === 0;
+      dps.join.hidden = b.top.length >= JOIN_BELOW;
+      dps.foot.hidden = !dps.join.hidden;
+      dps.lead.textContent = b.top.length === 0 ? "No fights shared yet today. Be the first:" : "Want to see your name here?";
+      dps.list.replaceChildren(...b.top.map((p, i) => {
+        const row = el("div", "dps-row");
+        const who = el("div", "who");
+        who.append(el("b", null, p.name), el("span", null, [p.className, p.target, mmss(p.duration)].filter(Boolean).join(" · ")));
+        const val = el("div", "val");
+        val.append(el("b", null, shortNum(p.dps)), el("span", null, "DPS"));
+        row.append(el("span", "rank", String(i + 1)), classBadge(p.className), who, val);
+        return row;
+      }));
+
+      const max = Math.max(1, ...b.classes.map((c) => c.best)) * 1.04;
+      // Every class is listed; classes without fights yet sit at the bottom.
+      const seen = new Set(b.classes.map((c) => c.className));
+      const rows = [...b.classes, ...ALL_CLASSES.filter((n) => !seen.has(n)).map((n) => ({ className: n, average: 0, best: 0, fights: 0 }))];
+      dps.cls.replaceChildren(...rows.map((c) => {
+        const row = el("div", "cls-row");
+        if (!c.fights) row.dataset.none = "";
+        row.dataset.class = String(c.className).toLowerCase();
+        const bar = el("div", "cbar");
+        const avg = el("i");
+        avg.style.width = `${(c.average / max) * 100}%`;
+        const best = el("u");
+        best.style.left = `${(c.best / max) * 100}%`;
+        best.title = `Best fight ${shortNum(c.best)} DPS`;
+        bar.append(avg);
+        if (c.fights) bar.append(best);
+        const num = el("div", "num2");
+        num.append(el("b", null, c.fights ? shortNum(c.average) : "–"), el("span", null, c.fights === 1 ? "1 fight" : `${c.fights} fights`));
+        row.append(classBadge(c.className), el("span", "nm", c.className), bar, num);
+        return row;
+      }));
+    } catch {
+      dps.list.hidden = true;
+      dps.join.hidden = false;
+      dps.foot.hidden = true;
+    }
+  }
+
   const findForm = $("find-form");
   const findName = $("find-name");
   const findNote = $("find-note");
@@ -653,4 +750,6 @@
   load();
   loadRoster();
   setInterval(loadRoster, ROSTER_REFRESH_MS);
+  loadDps();
+  setInterval(loadDps, DPS_REFRESH_MS);
 })();

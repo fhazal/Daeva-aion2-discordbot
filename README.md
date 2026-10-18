@@ -84,6 +84,7 @@ Follows the live Gartua feed and pings 10 minutes before the spawn. Trusted role
 | `/gartua` | Immortal Gartua tracking: `status` for everyone, `set` and `channel` for trusted roles |
 | `/server` | Asia server status and character-creation state |
 | `/profile` | Opt-in roster and role sync |
+| `/meter` | Daeva Meter sharing: `link`, `unlink`, `status` for everyone; `revoke` and `recap` for admins |
 | `/guide` | Quick help post |
 | `/config` | Default region and role → region maps |
 | `/ping` | Latency check |
@@ -131,6 +132,14 @@ Everything specific to your community lives in `.env`, and nothing in the code i
 | `NEWS_CHANNEL_ID` | Where Steam patch notes are posted (blank disables) |
 | `LEGION_NAME`, `LEGION_ROLE_ID`, `PLAYER_ROLE_ID` | Legion roster and role sync |
 | `LOCK_EMOJI`, `UNLOCK_EMOJI` | Your own custom emojis for the creation icons |
+
+## 📊 Daeva Meter DPS boards
+
+Members run `/meter link` to get a private token and paste it into Daeva Meter (Settings → Share with Daeva bot). The meter then posts finished fights to `POST /api/meter` (contract: `docs/BOT_API.md` in the meter repo). Daeva keeps only real boss and elite fights of 20 s to 30 min, decides the monster's rank itself from the gaming.tools mirror, works out DPS from damage ÷ duration, merges duplicate party uploads and shows linked members only.
+
+- `GET /api/dps-today` feeds the site's **Highest DPS today** (top 10) and **Class DPS today** cards; "today" runs from daily reset to daily reset.
+- `/meter recap #channel` posts a daily recap 5 minutes before reset.
+- Tokens are stored as hashes. Fights are kept 30 days, each day's results a year.
 
 ## 🔄 Updating
 

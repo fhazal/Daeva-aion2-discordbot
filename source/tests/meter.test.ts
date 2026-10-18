@@ -1,0 +1,127 @@
+import Database from "better-sqlite3";
+import { beforeEach, describe, expect, it } from "vitest";
+import { createLink, fightsBetween, getLink, removeLink, userForToken, useMeterDatabase } from "../src/persistence/meter.js";
+import { buildBoard } from "../src/services/meter-board.js";
+import { ingestUpload } from "../src/services/meter-ingest.js";
+import { isBossOrElite, ranksFromDevalue } from "../src/services/npc-ranks.js";
+
+const NOW = Date.UTC(2026, 9, 19, 3, 0, 0);
+const RANKS: Record<number, string> = { 2400002: "Legendary", 2000002: "Heroic", 2100001: "Elite", 1000001: "Common" };
+const rankOf = async (id: number) => RANKS[id] ?? null;
+
+type P = { name: string; class?: string; dmg: number; is_self?: boolean; onTarget?: number };
+function upload(selfName: string, players: P[], opts: { npc?: number; duration?: number; start?: number; demo?: boolean; maxHp?: number; target?: string } = {}) {
+  return {
+    type: "fight",
+    meter: "daeva-meter",
+    demo: opts.demo ?? false,
+    record: {
+      started_unix: (opts.start ?? NOW - 10 * 60_000) / 1000,
+      duration: opts.duration ?? 100,
+      boss_killed: true,
+      self_name: selfName,
+      target: { id: 777, npc_id: opts.npc ?? 2400002, name: opts.target ?? "Watcher Kaira", max_hp: opts.maxHp ?? 50_000_000 },
+      players: players.map((p) => ({
+        name: p.name,
+        class: p.class ?? "Gladiator",
+        dmg: p.dmg,
+        dps: p.dmg / (opts.duration ?? 100),
+        is_self: p.is_self ?? false,
+        targets: [{ id: 777, name: "Watcher Kaira", dmg: p.onTarget ?? p.dmg }],
+      })),
+    },
+  };
+}
+
+beforeEach(() => {
+  useMeterDatabase(new Database(":memory:"));
+});
+
+describe("meter links", () => {
+  it("issues a token that maps back to the member, and replaces it on relink", () => {
+    const t1 = createLink("u1", NOW);
+    expect(userForToken(t1)).toBe("u1");
+    const t2 = createLink("u1", NOW);
+    expect(userForToken(t1)).toBeNull();
+    expect(userForToken(t2)).toBe("u1");
+    expect(getLink("u1")?.uploads).toBe(0);
+    expect(removeLink("u1")).toBe(true);
+    expect(userForToken(t2)).toBeNull();
+  });
+});
+
+describe("ingestUpload", () => {
+  it("counts a linked member's boss fight and computes DPS from damage", async () => {
+    createLink("u1", NOW);
+    const r = await ingestUpload("u1", upload("BajuBesi", [{ name: "BajuBesi", dmg: 4_820_000, is_self: true }]), rankOf, NOW);
+    expect(r.status).toBe(200);
+    const f = fightsBetween(0, NOW + 1);
+    expect(f).toHaveLength(1);
+    expect(f[0]?.dps).toBe(48_200);
+    expect(f[0]?.rank).toBe("Legendary");
+  });
+
+  it("ignores demo, short, common and unknown monsters", async () => {
+    createLink("u1", NOW);
+    const me = [{ name: "BajuBesi", dmg: 1000, is_self: true }];
+    expect((await ingestUpload("u1", upload("BajuBesi", me, { demo: true }), rankOf, NOW)).body.ignored).toBe("Demo fight");
+    expect((await ingestUpload("u1", upload("BajuBesi", me, { duration: 12 }), rankOf, NOW)).status).toBe(202);
+    expect((await ingestUpload("u1", upload("BajuBesi", me, { npc: 1000001 }), rankOf, NOW)).body.ignored).toBe("Not a boss or elite fight");
+    expect((await ingestUpload("u1", upload("BajuBesi", me, { npc: 5 }), rankOf, NOW)).status).toBe(202);
+    expect(fightsBetween(0, NOW + 1)).toHaveLength(0);
+  });
+
+  it("refuses damage far above the monster's HP", async () => {
+    createLink("u1", NOW);
+    const r = await ingestUpload("u1", upload("BajuBesi", [{ name: "BajuBesi", dmg: 9_000_000, is_self: true }], { maxHp: 1_000_000 }), rankOf, NOW);
+    expect(r.status).toBe(422);
+  });
+
+  it("only shows linked party members and merges duplicate party uploads", async () => {
+    createLink("u1", NOW);
+    createLink("u2", NOW);
+    const party = (self: string) => [
+      { name: "BajuBesi", dmg: 3_000_000, is_self: self === "BajuBesi" },
+      { name: "ExamElope", class: "Templar", dmg: 2_000_000, is_self: self === "ExamElope" },
+      { name: "Stranger", class: "Ranger", dmg: 1_000_000 },
+    ];
+    // u2 has played before, so ExamElope is a known linked character.
+    await ingestUpload("u2", upload("ExamElope", [{ name: "ExamElope", class: "Templar", dmg: 500_000, is_self: true }], { npc: 2100001, target: "Elite Guard" }), rankOf, NOW);
+    const a = await ingestUpload("u1", upload("BajuBesi", party("BajuBesi")), rankOf, NOW);
+    expect(a.body.counted).toBe(2); // BajuBesi + ExamElope, not the unlinked Stranger
+    const b = await ingestUpload("u2", upload("ExamElope", party("ExamElope"), { start: NOW - 10 * 60_000 + 4000 }), rankOf, NOW);
+    expect(b.body.counted).toBe(0); // same kill, already counted
+    const names = fightsBetween(0, NOW + 1).map((f) => f.character).sort();
+    expect(names).toEqual(["BajuBesi", "ExamElope", "ExamElope"]);
+  });
+
+  it("refuses a character already linked to someone else", async () => {
+    createLink("u1", NOW);
+    createLink("u2", NOW);
+    await ingestUpload("u1", upload("BajuBesi", [{ name: "BajuBesi", dmg: 1_000_000, is_self: true }]), rankOf, NOW);
+    const r = await ingestUpload("u2", upload("BajuBesi", [{ name: "BajuBesi", dmg: 9_000_000, is_self: true }], { start: NOW - 60 * 60_000 }), rankOf, NOW);
+    expect(r.status).toBe(409);
+  });
+});
+
+describe("buildBoard", () => {
+  it("ranks each player's best fight and averages classes", () => {
+    const f = (character: string, className: string, dps: number) => ({ character, className, dps, duration: 100, target: "Kaira", rank: "Legendary", bossKilled: true, startedAt: NOW });
+    const board = buildBoard([f("A", "Gladiator", 30_000), f("A", "Gladiator", 50_000), f("B", "Cleric", 20_000), f("C", "Gladiator", 40_000)], 0, 1, "2026-10-19");
+    expect(board.top.map((t) => [t.name, t.dps])).toEqual([["A", 50_000], ["C", 40_000], ["B", 20_000]]);
+    expect(board.classes[0]).toEqual({ className: "Gladiator", average: 40_000, best: 50_000, fights: 3 });
+    expect(board.players).toBe(3);
+    expect(board.fights).toBe(4);
+  });
+});
+
+describe("npc ranks", () => {
+  it("reads ranks from a gaming.tools devalue payload", () => {
+    const src = `[[1,14],{"entityType":2,"categories":3,"aliases":6,"minimumLevel":8,"maximumLevel":9,"level":10,"mainCategoryId":11,"name":7,"iconPath":12,"id":13,"rank":17,"rankName":18},"npc",[4,5],"npcs/monster/intellect","npcs/citizen",[7,7,7,7],"Draconute Ranger",17,70,0,"npcs","/images/custom/npcs.2000002.webp","2000002",{"name":15,"id":16,"x":-1},"Earth's Retribution","17010000","heromonster","Heroic"]`;
+    expect(ranksFromDevalue(src).get(2000002)).toBe("Heroic");
+    expect(isBossOrElite("Heroic")).toBe(true);
+    expect(isBossOrElite("Elite")).toBe(true);
+    expect(isBossOrElite("Common")).toBe(false);
+    expect(isBossOrElite(null)).toBe(false);
+  });
+});
