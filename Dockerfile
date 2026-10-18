@@ -4,21 +4,21 @@ ENV NODE_ENV=production \
     DATABASE_PATH=/state/bot.sqlite
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3 iputils-ping ca-certificates make g++ fontconfig fonts-dejavu-core patch \
+    && apt-get install -y --no-install-recommends python3 iputils-ping ca-certificates make g++ fontconfig fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 
 # --- Asia server-status scraper -------------------------------------------
-# aion2_api.py is axsddlr's work (https://github.com/axsddlr/aion2_api). It is not
-# redistributed in this repository: the build downloads it from upstream at a
-# pinned commit, verifies its checksum, then applies Daeva's small local patch.
-ARG AION2_API_COMMIT=487d248b891af6054073d7e3bf9bcc3e5bd6e5d2
-ARG AION2_API_SHA256=bac649fff4f8babad068b2973c79f8d7f081b6c532c11481da9f105a4e8a033d
+# aion2_api.py is axsddlr's work (https://github.com/axsddlr/aion2_api, MIT).
+# The build downloads it from upstream at a pinned commit and verifies its
+# checksum. bd34416 makes the population columns optional upstream, so Daeva
+# no longer needs its own patch.
+ARG AION2_API_COMMIT=bd3441646fe6cbb0c163b8e4d2c1b4be7ebe2ae8
+ARG AION2_API_SHA256=aeb2af6a764fc7ff30246ad2da90e67511f23834b407b1c6d19dc49f03c1e595
 COPY server-status-scraper/ /opt/aion2-scraper/
 RUN python3 -c "import urllib.request,sys; urllib.request.urlretrieve(sys.argv[1], sys.argv[2])" \
         "https://raw.githubusercontent.com/axsddlr/aion2_api/${AION2_API_COMMIT}/aion2_api.py" \
         /opt/aion2-scraper/aion2_api.py \
-    && echo "${AION2_API_SHA256}  /opt/aion2-scraper/aion2_api.py" | sha256sum -c - \
-    && patch /opt/aion2-scraper/aion2_api.py < /opt/aion2-scraper/aion2_api-optional-columns.patch
+    && echo "${AION2_API_SHA256}  /opt/aion2-scraper/aion2_api.py" | sha256sum -c -
 
 # --- Daeva bot ---------------------------------------------------------------
 WORKDIR /app

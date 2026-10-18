@@ -178,7 +178,7 @@ Daeva reads public data from other services. If you run your own copy, please ke
 ## 🙏 Credits
 
 - **[kectx/aion2-discord-bot](https://github.com/kectx/aion2-discord-bot)** is the foundation Daeva grew from (MIT, licence kept in [`source/LICENSE`](source/LICENSE)).
-- **[axsddlr/aion2_api](https://github.com/axsddlr/aion2_api)** powers the server-status data. That project has no licence file, so its code is **not included** here. The Docker build downloads it from upstream at a pinned commit, verifies its checksum, and applies a small patch ([`aion2_api-optional-columns.patch`](server-status-scraper/aion2_api-optional-columns.patch)).
+- **[axsddlr/aion2_api](https://github.com/axsddlr/aion2_api)** by Andre Saddler (MIT) powers the server-status data. The Docker build downloads it from upstream at a pinned commit and verifies its checksum. Thanks for fixing the missing-columns issue upstream!
 - **[AION 2 Global Database](https://aion2.gaming.tools/)** by the gaming.tools team supplies the monster and skill names and icons that Daeva mirrors for [Daeva Meter](https://github.com/fhazal/DAEVA-dps-meter) (`/api/gt`). Used with the kind permission of its admin, Thank you!
 - **[Aion2Timers](https://www.aion2timers.com)** provides the community-reported Gartua kill times behind the live Gartua estimate; `/gartua set` remains the manual fallback.
 - Daeva's own additions and changes are released under the [MIT licence](LICENSE).
