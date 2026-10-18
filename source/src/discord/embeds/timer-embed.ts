@@ -100,7 +100,33 @@ export function buildTimerEmbed(params: {
                     })() : [];
                     const roster = `Roster: ${asiaStatus.rosterState === "ready" ? `${asiaStatus.servers.length} servers loaded` : "unavailable"}`;
                     const maintenance = `Maintenance feed: ${asiaStatus.noticesState === "ready" ? "available" : "unavailable"}`;
-                    const activeNotices = `Active timed notices: ${asiaStatus.notices.filter((notice) => notice.start && notice.end && Date.parse(notice.start) <= Date.now() && Date.now() < Date.parse(notice.end)).length}`;
+                    // Timed notices (maintenance windows) from aion2.tools: say
+                    // "unknown" when that feed is down rather than a misleading 0.
+                    const activeNotices = (() => {
+                      if (asiaStatus.noticesState !== "ready") {
+                        return "Active timed notices: — (feed unavailable)";
+                      }
+                      const now = Date.now();
+                      const timed = asiaStatus.notices
+                        .map((notice) => ({
+                          title: notice.title,
+                          start: notice.start ? Date.parse(notice.start) : NaN,
+                          end: notice.end ? Date.parse(notice.end) : NaN,
+                        }))
+                        .filter((n) => Number.isFinite(n.start) && Number.isFinite(n.end));
+                      const active = timed.filter((n) => n.start <= now && now < n.end);
+                      if (active.length) {
+                        const first = active[0]!;
+                        const more = active.length > 1 ? ` (+${active.length - 1} more)` : "";
+                        return `🟡 ${active.length} active · ${first.title} until <t:${Math.floor(first.end / 1000)}:t>${more}`;
+                      }
+                      const next = timed
+                        .filter((n) => n.start > now && n.start - now < 7 * 24 * 3600 * 1000)
+                        .sort((x, y) => x.start - y.start)[0];
+                      return next
+                        ? `🗓️ Next: ${next.title} <t:${Math.floor(next.start / 1000)}:R>`
+                        : "✅ No maintenance scheduled";
+                    })();
                     const footer = `${roster} · ${maintenance}\n${activeNotices}`;
                     const available = lines.length
                       ? lines.join("\n")
