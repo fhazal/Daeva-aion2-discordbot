@@ -8,6 +8,7 @@ import { startWebServer } from "./web/server.js";
 import { startRosterRefresh } from "./services/legion.js";
 import { startGamingToolsMirror } from "./services/gaming-tools-mirror.js";
 import { startMeterDaily } from "./services/meter-daily.js";
+import { startUpdates } from "./services/updates.js";
 
 async function main(): Promise<void> {
   const env = loadEnv();
@@ -16,6 +17,7 @@ async function main(): Promise<void> {
   const stopMirror = startGamingToolsMirror();
   let stopRoster: (() => void) | null = null;
   let stopMeter: (() => void) | null = null;
+  let stopUpdates: (() => void) | null = null;
 
   const { client, startBackgroundJobs } = await createClient();
   let stoppers: ReturnType<typeof startBackgroundJobs> | null = null;
@@ -34,6 +36,7 @@ async function main(): Promise<void> {
     stopMirror();
     stopRoster?.();
     stopMeter?.();
+    stopUpdates?.();
     client.destroy();
     closeDatabase();
     process.exit(0);
@@ -45,6 +48,7 @@ async function main(): Promise<void> {
   client.once("clientReady", () => {
     stopRoster = startRosterRefresh(client);
     stopMeter = startMeterDaily(client);
+    stopUpdates = startUpdates(client);
   });
 
   await client.login(env.DISCORD_TOKEN);
