@@ -83,6 +83,24 @@ describe("ingestUpload", () => {
     f = fightsBetween(0, NOW + 1);
     expect(f).toHaveLength(2);
     expect(f.every((x) => !x.verified)).toBe(true);
+    // Open-world boss (0.3.9+): only nearby players' hits arrive, but the
+    // meter watched it from full health to the kill: verified.
+    useMeterDatabase(new Database(":memory:"));
+    createLink("u1", NOW);
+    await ingestUpload("u1", boss({ clock_counted: 0.039, clock_watched: true }), rankOf, NOW);
+    expect(fightsBetween(0, NOW + 1)[0]?.verified).toBe(true);
+    // Joined late (first seen below full health): not verified.
+    useMeterDatabase(new Database(":memory:"));
+    createLink("u1", NOW);
+    await ingestUpload("u1", boss({ clock_counted: 0.039, clock_watched: false }), rankOf, NOW);
+    expect(fightsBetween(0, NOW + 1)[0]?.verified).toBe(false);
+    // Watched, but traffic was lost: not verified.
+    useMeterDatabase(new Database(":memory:"));
+    createLink("u1", NOW);
+    await ingestUpload("u1", boss({ clock_counted: 0.039, clock_watched: true, gaps: 2 }), rankOf, NOW);
+    expect(fightsBetween(0, NOW + 1)[0]?.verified).toBe(false);
+    useMeterDatabase(new Database(":memory:"));
+    createLink("u1", NOW);
     // Impossible damage on the boss is refused.
     expect((await ingestUpload("u1", boss({ clock_counted: 2.4, started_unix: (NOW - 60_000) / 1000 }), rankOf, NOW)).status).toBe(422);
     // Older meters (no clock) still count, unverified.

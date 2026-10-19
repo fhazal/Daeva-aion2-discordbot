@@ -144,10 +144,15 @@ export async function ingestUpload(
   if (owner && owner !== userId) return bad("This character is linked to another member", 409);
   claimCharacter(userId, selfName, self.className, now);
 
-  // Verified ✓: killed, the damage seen on the boss covers its HP, and no
-  // game traffic was lost during the fight.
+  // Verified ✓: the meter recorded the whole kill with no game traffic lost.
+  // Either the damage it saw covers the boss's HP, or (meter 0.3.9+) it
+  // watched the boss from (nearly) full health to the kill. The second
+  // covers open-world bosses, where the game only sends the hits of players
+  // near you, so the HP check can't reach 100% however complete your own
+  // record is.
   const bossKilled = rec.boss_killed === true;
-  const verified = bossClock && bossKilled && counted != null && counted >= VERIFIED_MIN && num(rec.gaps) === 0;
+  const watched = rec.clock_watched === true;
+  const verified = bossClock && bossKilled && counted != null && (counted >= VERIFIED_MIN || watched) && num(rec.gaps) === 0;
   const base = { duration, target: targetName, npcId, rank, bossKilled, verified, startedAt };
   let stored = 0;
   for (const r of rows) {
