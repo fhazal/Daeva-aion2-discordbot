@@ -5,6 +5,7 @@ import type { EventOccurrence, Region } from "../../core/types.js";
 import { getScheduleDisclaimer } from "../../core/schedule-engine.js";
 import type { GartuaTimer } from "../../persistence/store.js";
 import type { AsiaStatusSnapshot } from "../../services/asia-status.js";
+import { daevaFooter } from "../../version.js";
 
 function formatOccurrence(occ: EventOccurrence): string {
   const absolute = time(occ.startsAt, TimestampStyles.ShortTime);
@@ -206,8 +207,6 @@ export function buildTimerEmbed(params: {
       },
     )
     
-    .setFooter({
-      text: `Daeva v1.2.0 • Bajubesi Network • AION 2 Discord Assistant`,
-    })
+    .setFooter(daevaFooter("Daeva • Bajubesi Network • AION 2 Discord Assistant"))
     .setTimestamp(new Date());
 }

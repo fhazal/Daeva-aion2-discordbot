@@ -5,6 +5,7 @@ import { fightsBetween, getDaily, markRecapPosted, pruneMeter, recapTargets, sav
 import { buildBoard, shortNumber, type DpsBoard } from "./meter-board.js";
 import { monthStart } from "./meter-month.js";
 import { classColor, classEmoji } from "../discord/class-style.js";
+import { daevaFooter } from "../version.js";
 
 /** Time zone for the recap's date line (the community's). */
 const RECAP_TZ = process.env.RECAP_TZ ?? "Asia/Kuala_Lumpur";
@@ -89,9 +90,9 @@ export function recapEmbed(board: DpsBoard): EmbedBuilder | null {
     .setTitle("Daily DPS recap")
     .setURL(SITE)
     .setDescription([`🗓️ ${day} · since ${reset} reset`, ...lines].join("\n"))
-    .setFooter({
-      text: `${board.top.some((p) => p.verified) ? "✅ every hit counted · " : ""}⚔️ ${board.fights} boss and elite fights · 👥 ${board.players} players · Link your meter with /meter link`,
-    })
+    .setFooter(
+      daevaFooter(`${board.top.some((p) => p.verified) ? "✅ every hit counted · " : ""}⚔️ ${board.fights} boss and elite fights · 👥 ${board.players} players · Link your meter with /meter link`),
+    )
     .setTimestamp(new Date(board.endsAt));
   if (strongest) {
     embed.addFields({

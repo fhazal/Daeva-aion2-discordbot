@@ -9,6 +9,7 @@ import { startRosterRefresh } from "./services/legion.js";
 import { startGamingToolsMirror } from "./services/gaming-tools-mirror.js";
 import { startMeterDaily } from "./services/meter-daily.js";
 import { startUpdates } from "./services/updates.js";
+import { DAEVA_VERSION, setFooterIcon } from "./version.js";
 
 async function main(): Promise<void> {
   const env = loadEnv();
@@ -46,6 +47,8 @@ async function main(): Promise<void> {
   process.once("SIGTERM", () => void shutdown("SIGTERM"));
 
   client.once("clientReady", () => {
+    setFooterIcon(client.user?.displayAvatarURL({ extension: "png", size: 64 }));
+    logger.info({ version: DAEVA_VERSION }, "Daeva version");
     stopRoster = startRosterRefresh(client);
     stopMeter = startMeterDaily(client);
     stopUpdates = startUpdates(client);

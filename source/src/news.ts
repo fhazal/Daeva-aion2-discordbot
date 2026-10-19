@@ -8,6 +8,28 @@ export type NewsEntry = { id: string; title: string; intro: string; items: NewsI
 
 export const NEWS: NewsEntry[] = [
   {
+    id: "2026-10-20-v1.3.0",
+    title: "🚀 New on Daeva · 1.3.0",
+    intro: "Daeva now has a proper version number: you'll see **Daeva v1.3.0** at the bottom of every card.",
+    items: [
+      {
+        emoji: "📖",
+        title: "/help",
+        text: "Every command with a one-line explanation. Click one to start typing it. Only you see the list.",
+      },
+      {
+        emoji: "✅",
+        title: "Fair ✅ for world bosses",
+        text: "With Daeva Meter 0.3.9, a world-boss kill the meter watched from full health is verified on the DPS boards, even though the game only sends the hits of players near you.",
+      },
+      {
+        emoji: "🏷️",
+        title: "Version in every footer",
+        text: "Timers, alerts, the roster, the DPS recap and announcements now show which Daeva posted them.",
+      },
+    ],
+  },
+  {
     id: "2026-10-20-monthly-boards",
     title: "🚀 New on Daeva · 20 October",
     intro: "Fresh features for the Fiist legion bot and **aion2.bajubesi.org**.",

@@ -2,6 +2,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { EmbedBuilder, type Client } from "discord.js";
 import { logger } from "../lib/logger.js";
+import { daevaFooter } from "../version.js";
 
 /** Posts official AION 2 Steam announcements (patch notes / news) to a channel. */
 const APP_ID = process.env.STEAM_APP_ID ?? "3393110";
@@ -102,7 +103,7 @@ async function checkNews(client: Client): Promise<void> {
       .setURL(i.url)
       .setDescription(summary(i.contents) || "Read the full post on Steam.")
       .setTimestamp(new Date(i.date * 1000))
-      .setFooter({ text: "Official announcement via Steam" });
+      .setFooter(daevaFooter("Official announcement via Steam"));
     const img = firstImage(i.contents);
     if (img) embed.setImage(img);
 

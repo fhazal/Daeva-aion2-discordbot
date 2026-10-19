@@ -37,15 +37,13 @@ const command: Command = {
     const first = !updatesTargets().some((t) => t.guildId === interaction.guildId);
     setUpdatesChannel(interaction.guildId, channel.id, role?.id ?? null);
     if (first) skipOlderNews(interaction.guildId);
-    await interaction.reply({
-      flags: MessageFlags.Ephemeral,
-      content: [
-        `Update announcements will be posted in <#${channel.id}>${role ? `, pinging <@&${role.id}> for new Daeva Meter releases` : ""}.`,
-        "Anything not announced yet (the current Daeva Meter release and the latest Daeva news) is being posted there now.",
-      ].join("\n"),
-      allowedMentions: { parse: [] },
-    });
-    await announceNow(interaction.client, interaction.guildId).catch(() => undefined);
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    const posted = await announceNow(interaction.client, interaction.guildId).catch(() => 0);
+    const where = `Update announcements will be posted in <#${channel.id}>${role ? `, pinging <@&${role.id}> for new Daeva Meter releases` : ""}.`;
+    const now = posted
+      ? `Posted ${posted === 1 ? "1 announcement" : `${posted} announcements`} there that this server hadn't had yet.`
+      : "Nothing new to post yet: the next Daeva Meter release or Daeva news will go there. Earlier announcements aren't repeated.";
+    await interaction.editReply({ content: `${where}\n${now}`, allowedMentions: { parse: [] } });
   },
 };
 

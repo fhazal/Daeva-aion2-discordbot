@@ -10,6 +10,7 @@ import { execFile } from "node:child_process";
 import { lookup } from "node:dns/promises";
 import net from "node:net";
 import { promisify } from "node:util";
+import { daevaFooter } from "../version.js";
 
 const API_URL = "https://aion2.tools/api/server-status?region=as";
 const POLL_INTERVAL_MS = 60_000;
@@ -550,9 +551,7 @@ export function buildAsiaStatusEmbed(
      (snapshot.liveSummary ? `Live status: ${snapshot.liveSummary}` : "") +
       creationLine,
     )
-    .setFooter({
-      text: "Live server status: gaming.tools · Roster/maintenance: aion2.tools",
-    })
+    .setFooter(daevaFooter("Live server status: gaming.tools · Roster/maintenance: aion2.tools"))
     .setTimestamp(new Date(snapshot.observedAt));
 
   const noticeLines = active.map((notice) => {
@@ -681,6 +680,7 @@ export function startAsiaStatusMonitor(client: Client): () => void {
                 `${notice.scope ? `Scope: **${notice.scope}**\n` : ""}` +
                 "A new notice appeared in the status feed. Check the official details.",
               )
+              .setFooter(daevaFooter())
               .setTimestamp(new Date());
 
             if (notice.url) embed.setURL(notice.url);

@@ -10,6 +10,7 @@ import {
 import { getGartuaStore } from "../persistence/store.js";
 import { getCachedLiveGartuaEstimate, getLiveGartuaEstimate } from "../services/live-gartua.js";
 import type { Command } from "./types.js";
+import { daevaFooter } from "../version.js";
 
 const TRUSTED_ROLE_IDS = new Set(
   (process.env.GARTUA_TRUSTED_ROLE_IDS ?? "")
@@ -103,6 +104,7 @@ export const gartuaCommand: Command = {
           "Your saved Gartua countdown has not been changed.\n" +
           "This is not a spawn confirmation.",
         )
+        .setFooter(daevaFooter())
         .setTimestamp(new Date());
 
       await channel.send({ embeds: [embed] });

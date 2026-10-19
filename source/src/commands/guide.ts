@@ -8,6 +8,7 @@ import {
 } from "discord.js";
 import type { ChatInputCommandInteraction } from "discord.js";
 import type { Command } from "./types.js";
+import { daevaFooter } from "../version.js";
 
 const HUB_URL = "https://daevaos.com/guides/class-guide-hub";
 
@@ -126,7 +127,7 @@ const guideCommand: Command = {
           "Find class guides, quick references, builds and community resources.\n\n" +
             "Use `/guide class` to open the quick guide for a specific class.",
         )
-        .setFooter({ text: "Daeva • AION 2 Community Guides" });
+        .setFooter(daevaFooter("Daeva • AION 2 Community Guides"));
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
@@ -164,7 +165,7 @@ const guideCommand: Command = {
           `${guide.note}.\n\n` +
             "Open the linked page for the class reference. Check the page for updates before using a build.",
         )
-        .setFooter({ text: "Daeva • AION 2 Quick Guides" });
+        .setFooter(daevaFooter("Daeva • AION 2 Quick Guides"));
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()

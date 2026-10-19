@@ -34,6 +34,7 @@ import {
 import { displayLegion, isLegionMember, memberLegion, roleNote, syncRoles } from "../services/legion.js";
 import { classColor, classEmoji, factionEmoji, factionName } from "../discord/class-style.js";
 import type { Command } from "./types.js";
+import { daevaFooter } from "../version.js";
 
 const SITE = "https://aion2.bajubesi.org/#players";
 const PICK_TIMEOUT_MS = 60_000;
@@ -66,7 +67,7 @@ function profileCard(e: RosterEntry, note?: string) {
       { name: "🛡️ Item level", value: formatNum(e.itemLevel), inline: true },
       { name: "🏰 Legion", value: e.legion ? `${displayLegion(e.legion)}${ours ? " ✓" : ""}` : "–", inline: true },
     )
-    .setFooter({ text: "Bajubesi Network legion roster · last updated" })
+    .setFooter(daevaFooter("Bajubesi Network legion roster", "last updated"))
     .setTimestamp(new Date(e.updatedAt));
   // Faction under the name (custom emojis show in the description, not the author line).
   const lines = [e.faction ? `${factionEmoji(e.faction)} **${e.faction}**` : "", note ?? ""].filter(Boolean);

@@ -11,6 +11,7 @@ import { getEventMeta, getRegion } from "../data/load.js";
 import { logger } from "../lib/logger.js";
 import { getAlertStore, getGartuaStore, getGuildStore } from "../persistence/store.js";
 import { getLiveGartuaEstimate } from "./live-gartua.js";
+import { daevaFooter } from "../version.js";
 
 const ALERT_INTERVAL_MS = 30_000;
 
@@ -52,9 +53,9 @@ export function buildAlertEmbed(params: {
     .setTimestamp(startsAt);
 
   if (showRegion) {
-    embed.setFooter({ text: `${region.label} · T-${leadMinutes}m` });
+    embed.setFooter(daevaFooter(`${region.label} · T-${leadMinutes}m`));
   } else {
-    embed.setFooter({ text: `T-${leadMinutes}m` });
+    embed.setFooter(daevaFooter(`T-${leadMinutes}m`));
   }
 
   return embed;
@@ -218,7 +219,7 @@ function gartuaEmbed(spawnAt: string, source: "live" | "manual", due: boolean): 
         (source === "live" ? "Source: Aion2Timers kill reports." : "Source: manual estimate from a trusted member.") +
         "\n**Estimate only. Check the Field Boss list in-game.**",
     )
-    .setFooter({ text: `This alert removes itself ${keepMin} minutes after the spawn time.` })
+    .setFooter(daevaFooter(`This alert removes itself ${keepMin} minutes after the spawn time.`))
     .setTimestamp(new Date());
 }
 

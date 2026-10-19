@@ -11,6 +11,7 @@ import { logger } from "../lib/logger.js";
 import { NEWS, type NewsEntry } from "../news.js";
 import { markSent, updatesTargets, wasSent, type UpdatesTarget } from "../persistence/updates.js";
 import { parseAnnounce, parseChangelog, type Highlights } from "./updates-notes.js";
+import { daevaFooter } from "../version.js";
 
 /**
  * Announces new Daeva Meter releases (published on GitHub; drafts are never
@@ -62,7 +63,7 @@ export function releaseMessage(rel: Release, h: Highlights, roleId: string | nul
     .setURL(rel.url)
     .setThumbnail(METER_ICON)
     .setImage(`${METER_SHOT}?v=${version}`) // fresh copy per release; Discord caches by URL
-    .setFooter({ text: "Already installed? The meter offers the update · run the new installer over the old one", iconURL: METER_ICON })
+    .setFooter(daevaFooter("Already installed? The meter offers the update · run the new installer over the old one"))
     .setTimestamp(new Date(rel.publishedAt));
   if (h.tagline) embed.setDescription(h.tagline);
   if (h.added.length) embed.addFields({ name: "🆕 What's new", value: clip(h.added.join("\n")) });
@@ -93,7 +94,7 @@ export function newsMessage(n: NewsEntry, botIcon: string | undefined): MessageC
     .setURL(SITE)
     .setDescription(n.intro)
     .addFields(n.items.slice(0, 20).map((i) => ({ name: `${i.emoji} ${i.title}`, value: clip(i.text) })))
-    .setFooter({ text: "Daeva · aion2.bajubesi.org", ...(botIcon ? { iconURL: botIcon } : {}) });
+    .setFooter(daevaFooter("Daeva · aion2.bajubesi.org"));
   if (botIcon) embed.setThumbnail(botIcon);
   const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel("Open aion2.bajubesi.org").setEmoji("🌐").setURL(SITE),
@@ -104,18 +105,20 @@ export function newsMessage(n: NewsEntry, botIcon: string | undefined): MessageC
 
 let cache: { tag: string; h: Highlights } | null = null;
 
-/** Posts what this server hasn't had yet: the latest meter release and new bot news. */
-export async function announceTo(client: Client, t: UpdatesTarget, rel: Release | null): Promise<void> {
+/** Posts what this server hasn't had yet: the latest meter release and new bot news. Returns how many. */
+export async function announceTo(client: Client, t: UpdatesTarget, rel: Release | null): Promise<number> {
   const channel = await client.channels.fetch(t.channelId).catch(() => null);
   if (!channel || !channel.isTextBased() || channel.isDMBased()) {
     logger.warn({ guildId: t.guildId, channelId: t.channelId }, "Updates channel unavailable");
-    return;
+    return 0;
   }
+  let posted = 0;
   const send = (o: MessageCreateOptions) => (channel as TextChannel).send(o);
   if (rel && !wasSent(t.guildId, `meter:${rel.tag}`)) {
     if (!cache || cache.tag !== rel.tag) cache = { tag: rel.tag, h: await highlightsFor(rel.tag) };
     await send(releaseMessage(rel, cache.h, t.roleId));
     markSent(t.guildId, `meter:${rel.tag}`);
+    posted++;
     logger.info({ guildId: t.guildId, tag: rel.tag }, "Announced Daeva Meter release");
   }
   const icon = client.user?.displayAvatarURL({ size: 256 });
@@ -123,8 +126,10 @@ export async function announceTo(client: Client, t: UpdatesTarget, rel: Release 
     if (wasSent(t.guildId, `news:${n.id}`)) continue;
     await send(newsMessage(n, icon));
     markSent(t.guildId, `news:${n.id}`);
+    posted++;
     logger.info({ guildId: t.guildId, id: n.id }, "Announced Daeva news");
   }
+  return posted;
 }
 
 /** First setup in a server: only the newest news entry, not the whole history. */
@@ -132,11 +137,11 @@ export function skipOlderNews(guildId: string): void {
   for (const n of NEWS.slice(1)) markSent(guildId, `news:${n.id}`);
 }
 
-export async function announceNow(client: Client, guildId: string): Promise<void> {
+export async function announceNow(client: Client, guildId: string): Promise<number> {
   const t = updatesTargets().find((x) => x.guildId === guildId);
-  if (!t) return;
+  if (!t) return 0;
   const rel = await latestRelease().catch(() => null);
-  await announceTo(client, t, rel);
+  return announceTo(client, t, rel);
 }
 
 export function startUpdates(client: Client): () => void {
