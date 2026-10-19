@@ -304,7 +304,21 @@ export function pruneMeter(now = Date.now()): { fights: number; days: number } {
 
 // ---------- recap channels ----------
 
-export type RecapTarget = { guildId: string; channelId: string; lastPostedDay: string | null };
+export type RecapTarget = {
+  guildId: string;
+  channelId: string;
+  lastPostedDay: string | null;
+  /** The previous recap message, deleted when the next one is posted. */
+  lastChannelId: string | null;
+  lastMessageId: string | null;
+};
+
+function recapColumns(): void {
+  const d = open();
+  const cols = new Set((d.prepare("PRAGMA table_info(meter_recap)").all() as Array<{ name: string }>).map((c) => c.name));
+  if (!cols.has("last_channel_id")) d.exec("ALTER TABLE meter_recap ADD COLUMN last_channel_id TEXT");
+  if (!cols.has("last_message_id")) d.exec("ALTER TABLE meter_recap ADD COLUMN last_message_id TEXT");
+}
 
 export function setRecapChannel(guildId: string, channelId: string | null): void {
   const d = open();
@@ -319,15 +333,30 @@ export function setRecapChannel(guildId: string, channelId: string | null): void
 }
 
 export function recapTargets(): RecapTarget[] {
+  recapColumns();
   return (
-    open().prepare("SELECT guild_id, channel_id, last_posted_day FROM meter_recap").all() as Array<{
+    open().prepare("SELECT guild_id, channel_id, last_posted_day, last_channel_id, last_message_id FROM meter_recap").all() as Array<{
       guild_id: string;
       channel_id: string;
       last_posted_day: string | null;
+      last_channel_id: string | null;
+      last_message_id: string | null;
     }>
-  ).map((r) => ({ guildId: r.guild_id, channelId: r.channel_id, lastPostedDay: r.last_posted_day }));
+  ).map((r) => ({
+    guildId: r.guild_id,
+    channelId: r.channel_id,
+    lastPostedDay: r.last_posted_day,
+    lastChannelId: r.last_channel_id,
+    lastMessageId: r.last_message_id,
+  }));
 }
 
 export function markRecapPosted(guildId: string, day: string): void {
   open().prepare("UPDATE meter_recap SET last_posted_day = ? WHERE guild_id = ?").run(day, guildId);
+}
+
+/** Remembers the recap just posted, so tomorrow's can replace it. */
+export function setRecapMessage(guildId: string, channelId: string | null, messageId: string | null): void {
+  recapColumns();
+  open().prepare("UPDATE meter_recap SET last_channel_id = ?, last_message_id = ? WHERE guild_id = ?").run(channelId, messageId, guildId);
 }

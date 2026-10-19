@@ -1,7 +1,7 @@
 import { EmbedBuilder, type Client, type TextChannel } from "discord.js";
 import { getUpcoming } from "../core/schedule-engine.js";
 import { logger } from "../lib/logger.js";
-import { fightsBetween, getDaily, markRecapPosted, pruneMeter, recapTargets, saveDaily, setRecapChannel } from "../persistence/meter.js";
+import { fightsBetween, getDaily, markRecapPosted, pruneMeter, recapTargets, saveDaily, setRecapChannel, setRecapMessage } from "../persistence/meter.js";
 import { buildBoard, shortNumber, type DpsBoard } from "./meter-board.js";
 import { classColor, classEmoji } from "../discord/class-style.js";
 
@@ -96,8 +96,16 @@ async function postRecaps(client: Client, board: DpsBoard): Promise<void> {
       continue;
     }
     try {
-      await (channel as TextChannel).send({ embeds: [embed] });
+      const sent = await (channel as TextChannel).send({ embeds: [embed] });
+      setRecapMessage(t.guildId, sent.channelId, sent.id);
       logger.info({ guildId: t.guildId, day: board.day }, "Posted the daily DPS recap");
+      // Keep the channel tidy: only the latest recap stays (results are kept in meter_daily).
+      if (t.lastChannelId && t.lastMessageId) {
+        const old = await client.channels.fetch(t.lastChannelId).catch(() => null);
+        if (old && old.isTextBased() && !old.isDMBased()) {
+          await (old as TextChannel).messages.delete(t.lastMessageId).catch(() => undefined);
+        }
+      }
     } catch (error) {
       logger.warn({ err: error, guildId: t.guildId }, "Couldn't post the daily DPS recap");
     }
