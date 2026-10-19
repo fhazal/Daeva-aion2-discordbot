@@ -296,6 +296,9 @@ svg.lu { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: roun
 .app li { display: flex; gap: 10px; color: #c9d3e3; font-size: 15px; }
 .app li .ic { color: var(--gold2); margin-top: 1px; }
 .app img { width: 100%; max-width: 420px; height: auto; justify-self: center; filter: drop-shadow(0 20px 40px rgba(0, 0, 0, .5)); }
+.signed { display: flex; align-items: center; gap: 8px; margin-top: 14px; color: var(--muted); font-size: 13px; }
+.signed .ic { color: var(--green); }
+.signed a { color: var(--sky); font-weight: 600; }
 .text-link { display: inline-flex; align-items: center; gap: 6px; margin-left: 14px; color: var(--sky); font-size: 14px; font-weight: 600; }
 .text-link .ic { width: 14px; height: 14px; }
 
