@@ -31,6 +31,8 @@ export type RosterEntry = {
   itemLevel: number | null;
   legion: string | null;
   imageUrl: string | null;
+  /** "Elyos" or "Asmodian", when known. */
+  faction?: string | null;
   updatedAt: string;
 };
 
@@ -41,6 +43,7 @@ export type PublicRosterEntry = {
   combatPower: number | null;
   itemLevel: number | null;
   legion: string | null;
+  faction: string | null;
   server: string;
   profileUrl: string;
   armoryUrl: string | null;
@@ -94,6 +97,7 @@ const COLUMNS = `
       item_level INTEGER,
       legion TEXT,
       image_url TEXT,
+      faction TEXT,
       updated_at TEXT NOT NULL,
       PRIMARY KEY (guild_id, character_key)`;
 
@@ -145,6 +149,8 @@ function migrate(d: Database.Database): void {
       })();
     }
   }
+  const cols = new Set((d.prepare("PRAGMA table_info(legion_roster)").all() as Array<{ name: string }>).map((c) => c.name));
+  if (!cols.has("faction")) d.exec("ALTER TABLE legion_roster ADD COLUMN faction TEXT");
   d.exec("CREATE INDEX IF NOT EXISTS idx_legion_roster_user ON legion_roster (guild_id, user_id)");
 }
 
@@ -201,7 +207,7 @@ const SELECT_ENTRY = `
   SELECT guild_id as guildId, user_id as userId, character_name as characterName,
          class_name as className, server_id as serverId, region,
          profile_url as profileUrl, level, combat_power as combatPower,
-         item_level as itemLevel, legion, image_url as imageUrl, updated_at as updatedAt
+         item_level as itemLevel, legion, image_url as imageUrl, faction, updated_at as updatedAt
   FROM legion_roster`;
 
 /** Adds a character or refreshes it (matched by its profile link, so renames are followed). */
@@ -210,9 +216,9 @@ export function upsertRosterEntry(entry: Omit<RosterEntry, "updatedAt">): Roster
   open().prepare(
     `INSERT INTO legion_roster
        (guild_id, user_id, character_key, character_name, class_name, server_id, region, profile_url,
-        level, combat_power, item_level, legion, image_url, updated_at)
+        level, combat_power, item_level, legion, image_url, faction, updated_at)
      VALUES (@guildId, @userId, @characterKey, @characterName, @className, @serverId, @region, @profileUrl,
-             @level, @combatPower, @itemLevel, @legion, @imageUrl, @updatedAt)
+             @level, @combatPower, @itemLevel, @legion, @imageUrl, @faction, @updatedAt)
      ON CONFLICT(guild_id, character_key) DO UPDATE SET
        character_name = excluded.character_name,
        class_name = excluded.class_name,
@@ -224,8 +230,9 @@ export function upsertRosterEntry(entry: Omit<RosterEntry, "updatedAt">): Roster
        item_level = excluded.item_level,
        legion = excluded.legion,
        image_url = excluded.image_url,
+       faction = COALESCE(excluded.faction, faction),
        updated_at = excluded.updated_at`,
-  ).run({ ...entry, characterKey: characterKey(entry.profileUrl), updatedAt });
+  ).run({ ...entry, faction: entry.faction ?? null, characterKey: characterKey(entry.profileUrl), updatedAt });
   return { ...entry, updatedAt };
 }
 
@@ -275,6 +282,7 @@ export function listPublicRoster(): PublicRosterEntry[] {
     combatPower: r.combatPower,
     itemLevel: r.itemLevel,
     legion: r.legion,
+    faction: r.faction ?? null,
     server: serverName(r.serverId),
     profileUrl: r.profileUrl,
     armoryUrl: armoryUrl(r.profileUrl),

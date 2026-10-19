@@ -31,13 +31,14 @@ import {
   type CharacterMatch,
 } from "../services/character-search.js";
 import { displayLegion, isLegionMember, legionLine, memberLegion, syncRoles } from "../services/legion.js";
+import { classColor, classEmoji, factionEmoji, factionName } from "../discord/class-style.js";
 import type { Command } from "./types.js";
 
 const SITE = "https://aion2.bajubesi.org/#players";
 const PICK_TIMEOUT_MS = 60_000;
 const FACTION: Record<number, string> = { 1: "Elyos", 2: "Asmodian" };
 
-type Found = { serverId: number; characterId: string; region: string; name: string; level: number | null };
+type Found = { serverId: number; characterId: string; region: string; name: string; level: number | null; race?: number | null };
 
 function describe(m: CharacterMatch): string {
   const parts = [m.serverName];
@@ -49,24 +50,26 @@ function describe(m: CharacterMatch): string {
 
 const formatNum = (n: number | null) => (n != null ? n.toLocaleString("en-US") : "–");
 
-/** A profile card: portrait, details as fields, and link buttons. */
+/** A profile card: portrait, details as fields with icons, class colour, and its own link buttons. */
 function profileCard(e: RosterEntry, note?: string) {
   const ours = isLegionMember(e.legion);
   const embed = new EmbedBuilder()
-    .setColor(ours ? 0x5fd3c4 : 0x8b939e)
+    .setColor(classColor(e.className, ours ? 0x5fd3c4 : 0x8b939e))
     .setTitle(e.characterName)
     .setURL(e.profileUrl)
     .addFields(
-      { name: "Class", value: e.className, inline: true },
-      { name: "Level", value: formatNum(e.level), inline: true },
-      { name: "Server", value: serverName(e.serverId), inline: true },
-      { name: "Combat power", value: formatNum(e.combatPower), inline: true },
-      { name: "Item level", value: formatNum(e.itemLevel), inline: true },
-      { name: "Legion", value: e.legion ? `${displayLegion(e.legion)}${ours ? " ✓" : ""}` : "–", inline: true },
+      { name: `${classEmoji(e.className)} Class`, value: e.className, inline: true },
+      { name: "🎚️ Level", value: formatNum(e.level), inline: true },
+      { name: "🌐 Server", value: serverName(e.serverId), inline: true },
+      { name: "📈 Combat power", value: formatNum(e.combatPower), inline: true },
+      { name: "🛡️ Item level", value: formatNum(e.itemLevel), inline: true },
+      { name: "🏰 Legion", value: e.legion ? `${displayLegion(e.legion)}${ours ? " ✓" : ""}` : "–", inline: true },
     )
     .setFooter({ text: "Bajubesi Network legion roster · last updated" })
     .setTimestamp(new Date(e.updatedAt));
-  if (note) embed.setDescription(note);
+  // Faction under the name (custom emojis show in the description, not the author line).
+  const lines = [e.faction ? `${factionEmoji(e.faction)} **${e.faction}**` : "", note ?? ""].filter(Boolean);
+  if (lines.length) embed.setDescription(lines.join("\n"));
   if (e.imageUrl) embed.setThumbnail(e.imageUrl);
 
   const buttons = [new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel("Official profile").setURL(e.profileUrl)];
@@ -151,14 +154,14 @@ export const profileCommand: Command = {
         await interaction.reply({ content: "You're not on the roster yet. Add a character with `/profile set`.", ephemeral: true });
         return;
       }
-      // One card per character (Discord allows up to 5 embeds and 5 button rows).
-      const cards = chars.slice(0, MAX_CHARACTERS).map((e) => profileCard(e));
+      // One private message per character, so each card has its own buttons right under it.
+      const [first, ...rest] = chars.slice(0, MAX_CHARACTERS);
       await interaction.reply({
         content: `Your characters on the roster (${chars.length} of ${MAX_CHARACTERS}):`,
-        embeds: cards.flatMap((c) => c.embeds),
-        components: cards.flatMap((c) => c.components),
+        ...profileCard(first!),
         ephemeral: true,
       });
+      for (const e of rest) await interaction.followUp({ ...profileCard(e), ephemeral: true });
       return;
     }
 
@@ -238,6 +241,7 @@ export const profileCommand: Command = {
         itemLevel: info?.itemLevel ?? null,
         legion: info?.legion ?? null,
         imageUrl: info?.imageUrl ?? null,
+        faction: factionName(info?.raceId ?? found.race ?? null),
       });
       const roles = (await resync()) ?? ({ legion: "not-configured", player: "not-configured" } as const);
       const note = info
@@ -303,6 +307,7 @@ export const profileCommand: Command = {
       region: m.region,
       name: m.name,
       level: m.level,
+      race: m.race,
     });
 
     const only = matches.length === 1 ? matches[0] : undefined;

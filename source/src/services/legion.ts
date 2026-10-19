@@ -2,6 +2,7 @@ import type { Client, Guild, GuildMember } from "discord.js";
 import { logger } from "../lib/logger.js";
 import { characterRef, listRosterEntries, upsertRosterEntry } from "../persistence/roster.js";
 import { fetchCharacterInfo } from "./character-search.js";
+import { factionName } from "../discord/class-style.js";
 
 /**
  * Legion membership: gives the legion's Discord role to roster members whose
@@ -133,6 +134,7 @@ async function refreshRoster(client: Client): Promise<void> {
         itemLevel: info.itemLevel ?? entry.itemLevel,
         legion: info.legion,
         imageUrl: info.imageUrl ?? entry.imageUrl,
+        faction: factionName(info.raceId) ?? entry.faction ?? null,
       });
       updated++;
     }
