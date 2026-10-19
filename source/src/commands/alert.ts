@@ -3,6 +3,7 @@ import {
   PermissionFlagsBits,
   SlashCommandBuilder,
   type TextChannel,
+  MessageFlags,
 } from "discord.js";
 import { getEventMeta, listEventMeta, listRegions } from "../data/load.js";
 import { resolveRegionOrPrompt } from "../lib/resolve-interaction-region.js";
@@ -101,7 +102,7 @@ export const alertCommand: Command = {
 
   async execute(interaction) {
     if (!interaction.guildId || !interaction.channelId) {
-      await interaction.reply({ content: "Guild only.", ephemeral: true });
+      await interaction.reply({ content: "Guild only.", flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -111,7 +112,7 @@ export const alertCommand: Command = {
     if (sub === "list") {
       const alerts = store.listByGuild(interaction.guildId);
       if (alerts.length === 0) {
-        await interaction.reply({ content: "No alerts configured.", ephemeral: true });
+        await interaction.reply({ content: "No alerts configured.", flags: MessageFlags.Ephemeral });
         return;
       }
       const lines = alerts.map((a) => {
@@ -119,7 +120,7 @@ export const alertCommand: Command = {
         const role = a.mentionRoleId ? ` · <@&${a.mentionRoleId}>` : "";
         return `\`#${a.id}\` ${meta?.emoji ?? ""} **${meta?.name ?? a.eventId}** · \`${a.regionId}\` · T-${a.leadMinutes}m · <#${a.channelId}>${role}`;
       });
-      await interaction.reply({ content: lines.join("\n"), ephemeral: true });
+      await interaction.reply({ content: lines.join("\n"), flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -128,7 +129,7 @@ export const alertCommand: Command = {
       const removed = store.remove(interaction.guildId, id);
       await interaction.reply({
         content: removed ? `Removed alert \`#${id}\`.` : `No alert \`#${id}\` on this server.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -140,12 +141,12 @@ export const alertCommand: Command = {
       if (!channel || !channel.isTextBased() || channel.isDMBased() || !("messages" in channel)) {
         await interaction.reply({
           content: "Use this in a text channel.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
 
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       const textChannel = channel as TextChannel;
       const botId = interaction.client.user?.id;
@@ -223,7 +224,7 @@ export const alertCommand: Command = {
 
     await interaction.reply({
       content: `Alert \`#${alert.id}\` set: ${meta?.emoji ?? ""} **${meta?.name ?? eventId}** · **${resolved.region.label}** · T-${minutes}m in this channel.${noisy}`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   },
 };

@@ -1,4 +1,4 @@
-import { ChannelType, InteractionContextType, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
+import { ChannelType, InteractionContextType, PermissionFlagsBits, SlashCommandBuilder, MessageFlags } from "discord.js";
 import { setUpdatesChannel, updatesTargets } from "../persistence/updates.js";
 import { announceNow, skipOlderNews } from "../services/updates.js";
 import type { Command } from "./types.js";
@@ -29,7 +29,7 @@ const command: Command = {
     const sub = interaction.options.getSubcommand();
     if (sub === "off") {
       setUpdatesChannel(interaction.guildId, null);
-      await interaction.reply({ ephemeral: true, content: "Update announcements are off. Turn them back on with `/updates channel`." });
+      await interaction.reply({ flags: MessageFlags.Ephemeral, content: "Update announcements are off. Turn them back on with `/updates channel`." });
       return;
     }
     const channel = interaction.options.getChannel("channel", true);
@@ -38,7 +38,7 @@ const command: Command = {
     setUpdatesChannel(interaction.guildId, channel.id, role?.id ?? null);
     if (first) skipOlderNews(interaction.guildId);
     await interaction.reply({
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
       content: [
         `Update announcements will be posted in <#${channel.id}>${role ? `, pinging <@&${role.id}> for new Daeva Meter releases` : ""}.`,
         "Anything not announced yet (the current Daeva Meter release and the latest Daeva news) is being posted there now.",

@@ -9,6 +9,7 @@ import {
   type Interaction,
   type StringSelectMenuInteraction,
   type TextChannel,
+  MessageFlags,
 } from "discord.js";
 import { getUpcoming } from "./core/schedule-engine.js";
 import { loadCommands } from "./commands/load-commands.js";
@@ -99,9 +100,9 @@ async function handleInteraction(interaction: Interaction): Promise<void> {
     if (!interaction.isRepliable()) return;
     const message = "Something went wrong handling that command.";
     if (interaction.deferred || interaction.replied) {
-      await interaction.followUp({ content: message, ephemeral: true }).catch(() => undefined);
+      await interaction.followUp({ content: message, flags: MessageFlags.Ephemeral }).catch(() => undefined);
     } else {
-      await interaction.reply({ content: message, ephemeral: true }).catch(() => undefined);
+      await interaction.reply({ content: message, flags: MessageFlags.Ephemeral }).catch(() => undefined);
     }
   }
 }

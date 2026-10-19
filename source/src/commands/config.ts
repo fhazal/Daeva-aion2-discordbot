@@ -3,6 +3,7 @@ import {
   PermissionFlagsBits,
   SlashCommandBuilder,
   type ChatInputCommandInteraction,
+  MessageFlags,
 } from "discord.js";
 import { getRegion, listRegions } from "../data/load.js";
 import { getGuildStore } from "../persistence/store.js";
@@ -59,7 +60,7 @@ export const configCommand: Command = {
 
   async execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guildId) {
-      await interaction.reply({ content: "This command only works in a server.", ephemeral: true });
+      await interaction.reply({ content: "This command only works in a server.", flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -71,13 +72,13 @@ export const configCommand: Command = {
       if (regionId) {
         const region = getRegion(regionId);
         if (!region) {
-          await interaction.reply({ content: "Unknown region.", ephemeral: true });
+          await interaction.reply({ content: "Unknown region.", flags: MessageFlags.Ephemeral });
           return;
         }
         store.setDefaultRegion(interaction.guildId, region.id);
         await interaction.reply({
           content: `Default region set to **${region.label}** (\`${region.id}\`).`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -85,7 +86,7 @@ export const configCommand: Command = {
       store.setDefaultRegion(interaction.guildId, null);
       await interaction.reply({
         content: "Default region cleared. Members need a mapped role or must pick a region.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -95,13 +96,13 @@ export const configCommand: Command = {
       const regionId = interaction.options.getString("region", true);
       const region = getRegion(regionId);
       if (!region) {
-        await interaction.reply({ content: "Unknown region.", ephemeral: true });
+        await interaction.reply({ content: "Unknown region.", flags: MessageFlags.Ephemeral });
         return;
       }
       store.setRoleMapping(interaction.guildId, role.id, region.id);
       await interaction.reply({
         content: `Mapped <@&${role.id}> → **${region.label}** (\`${region.id}\`).`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -113,7 +114,7 @@ export const configCommand: Command = {
         content: removed
           ? `Removed mapping for <@&${role.id}>.`
           : `No mapping existed for <@&${role.id}>.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -140,7 +141,7 @@ export const configCommand: Command = {
           "Role maps:",
           ...mappingLines,
         ].join("\n"),
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   },

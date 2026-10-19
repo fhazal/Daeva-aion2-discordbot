@@ -4,6 +4,7 @@ import {
   ButtonStyle,
   EmbedBuilder,
   SlashCommandBuilder,
+  MessageFlags,
 } from "discord.js";
 import type { ChatInputCommandInteraction } from "discord.js";
 import type { Command } from "./types.js";
@@ -151,7 +152,7 @@ const guideCommand: Command = {
         await interaction.reply({
           content:
             "I couldn't find that class. Use `/guide aion` to open the guide hub.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }

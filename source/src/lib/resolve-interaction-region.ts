@@ -1,6 +1,7 @@
 import {
   type ChatInputCommandInteraction,
   type GuildMember,
+  MessageFlags,
 } from "discord.js";
 import { resolveRegion } from "../core/region-resolver.js";
 import type { Region, RegionResolution } from "../core/types.js";
@@ -40,13 +41,13 @@ export async function resolveRegionOrPrompt(
     if (!optionRegionId) {
       await interaction.reply({
         content: "In DMs, pass `region:` explicitly.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return null;
     }
     const region = getRegion(optionRegionId);
     if (!region) {
-      await interaction.reply({ content: "Unknown region.", ephemeral: true });
+      await interaction.reply({ content: "Unknown region.", flags: MessageFlags.Ephemeral });
       return null;
     }
     return { region, source: "option" };
@@ -85,7 +86,7 @@ export async function resolveRegionOrPrompt(
   await interaction.reply({
     content: message,
     components: [buildRegionSelectRow({ customId, candidateIds })],
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
   return null;
 }

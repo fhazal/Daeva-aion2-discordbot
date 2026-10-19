@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, time, TimestampStyles } from "discord.js";
+import { SlashCommandBuilder, time, TimestampStyles, MessageFlags } from "discord.js";
 import { getUpcoming } from "../core/schedule-engine.js";
 import { getEventMeta, listEventMeta, listRegions } from "../data/load.js";
 import { resolveRegionOrPrompt, sourceLabel } from "../lib/resolve-interaction-region.js";
@@ -49,7 +49,7 @@ export const nextCommand: Command = {
     if (!next || !meta) {
       await interaction.reply({
         content: `No upcoming **${meta?.name ?? eventId}** found.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }

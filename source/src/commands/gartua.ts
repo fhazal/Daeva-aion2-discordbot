@@ -5,6 +5,7 @@ import {
   PermissionFlagsBits,
   SlashCommandBuilder,
   type TextChannel,
+  MessageFlags,
 } from "discord.js";
 import { getGartuaStore } from "../persistence/store.js";
 import { getCachedLiveGartuaEstimate, getLiveGartuaEstimate } from "../services/live-gartua.js";
@@ -62,7 +63,7 @@ export const gartuaCommand: Command = {
 
   async execute(interaction) {
     if (!interaction.guildId || !interaction.channelId) {
-      await interaction.reply({ content: "Use this command in a server channel.", ephemeral: true });
+      await interaction.reply({ content: "Use this command in a server channel.", flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -78,7 +79,7 @@ export const gartuaCommand: Command = {
       if (!isTrusted && !isAdmin) {
         await interaction.reply({
           content: "Only trusted members can change the Gartua timer. Use `/gartua status` to see it.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -89,7 +90,7 @@ export const gartuaCommand: Command = {
       if (!channel || !channel.isTextBased() || channel.isDMBased()) {
         await interaction.reply({
           content: "Run this command in a server text channel.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -107,13 +108,13 @@ export const gartuaCommand: Command = {
       await channel.send({ embeds: [embed] });
       await interaction.reply({
         content: `Test alert sent successfully to <#${interaction.channelId}>. Your countdown was not changed.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
 
     if (sub === "status") {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const timer = store.get();
       const live = getCachedLiveGartuaEstimate() ?? (await getLiveGartuaEstimate());
       const leadMin = Math.max(1, Number(process.env.GARTUA_ALERT_LEAD_MIN ?? 10));
@@ -169,7 +170,7 @@ export const gartuaCommand: Command = {
         ) {
           await interaction.reply({
             content: "Could not access the previous Gartua alert channel. The estimate was kept; please check the bot's channel permissions and try again.",
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
           return;
         }
@@ -185,7 +186,7 @@ export const gartuaCommand: Command = {
             console.error("Could not delete Gartua alert during clear:", error);
             await interaction.reply({
               content: "Could not delete the previous Gartua alert. The estimate was kept; check the bot's Manage Messages permission and try again.",
-              ephemeral: true,
+              flags: MessageFlags.Ephemeral,
             });
             return;
           }
@@ -197,7 +198,7 @@ export const gartuaCommand: Command = {
         content: cleared
           ? "Gartua estimate cleared."
           : "No Gartua estimate was configured.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -207,7 +208,7 @@ export const gartuaCommand: Command = {
       const role = interaction.options.getRole("role");
       const target = await interaction.client.channels.fetch(channelId).catch(() => null);
       if (!target || !target.isTextBased() || target.isDMBased()) {
-        await interaction.reply({ content: "That channel can't receive alerts. Pick a server text channel.", ephemeral: true });
+        await interaction.reply({ content: "That channel can't receive alerts. Pick a server text channel.", flags: MessageFlags.Ephemeral });
         return;
       }
       store.setDestination({ guildId: interaction.guildId, channelId, mentionRoleId: role?.id ?? null });
@@ -216,7 +217,7 @@ export const gartuaCommand: Command = {
           `🐉 Gartua alerts will post in <#${channelId}>` +
           (role ? ` and ping <@&${role.id}>` : " with no ping") +
           ", shortly before each spawn. Your manual estimate, if any, is unchanged.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         allowedMentions: { parse: [] },
       });
       return;
@@ -227,13 +228,13 @@ export const gartuaCommand: Command = {
     const seconds = interaction.options.getInteger("seconds", true);
     const totalSeconds = hours * 3600 + minutes * 60 + seconds;
     if (totalSeconds < 1) {
-      await interaction.reply({ content: "Remaining time must be at least one second.", ephemeral: true });
+      await interaction.reply({ content: "Remaining time must be at least one second.", flags: MessageFlags.Ephemeral });
       return;
     }
 
     const channel = interaction.channel;
     if (!channel || !channel.isTextBased() || channel.isDMBased()) {
-      await interaction.reply({ content: "Run `/gartua set` in a text channel so the bot knows where to send the alert.", ephemeral: true });
+      await interaction.reply({ content: "Run `/gartua set` in a text channel so the bot knows where to send the alert.", flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -256,7 +257,7 @@ export const gartuaCommand: Command = {
       ) {
         await interaction.reply({
           content: "Could not access the previous Gartua alert channel. The existing estimate was kept; check the bot's channel permissions and try again.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -272,7 +273,7 @@ export const gartuaCommand: Command = {
           console.error("Could not delete previous Gartua alert:", error);
           await interaction.reply({
             content: "Could not delete the previous Gartua alert. The existing estimate was kept; check the bot's Manage Messages permission and try again.",
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
           return;
         }
@@ -291,7 +292,7 @@ export const gartuaCommand: Command = {
     const timestamp = Math.floor(Date.parse(spawnAt) / 1000);
     await interaction.reply({
       content: `🐉 **Immortal Gartua · Beritra** estimate saved.\nEstimated spawn: <t:${timestamp}:F> (<t:${timestamp}:R>).\nAlert channel: <#${interaction.channelId}>.\n⚠️ Estimate only; this does not confirm a spawn.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   },
 };

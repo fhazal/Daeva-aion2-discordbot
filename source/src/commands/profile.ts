@@ -7,6 +7,7 @@ import {
   InteractionContextType,
   SlashCommandBuilder,
   StringSelectMenuBuilder,
+  MessageFlags,
 } from "discord.js";
 import {
   armoryUrl,
@@ -133,7 +134,7 @@ export const profileCommand: Command = {
 
   async execute(interaction) {
     if (!interaction.guildId) {
-      await interaction.reply({ content: "Use this command in the server.", ephemeral: true });
+      await interaction.reply({ content: "Use this command in the server.", flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -151,7 +152,7 @@ export const profileCommand: Command = {
     if (sub === "show") {
       const chars = listMemberCharacters(guildId, userId);
       if (chars.length === 0) {
-        await interaction.reply({ content: "You're not on the roster yet. Add a character with `/profile set`.", ephemeral: true });
+        await interaction.reply({ content: "You're not on the roster yet. Add a character with `/profile set`.", flags: MessageFlags.Ephemeral });
         return;
       }
       // One private message per character, so each card has its own buttons right under it.
@@ -159,9 +160,9 @@ export const profileCommand: Command = {
       await interaction.reply({
         content: `Your characters on the roster (${chars.length} of ${MAX_CHARACTERS}):`,
         ...profileCard(first!),
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
-      for (const e of rest) await interaction.followUp({ ...profileCard(e), ephemeral: true });
+      for (const e of rest) await interaction.followUp({ ...profileCard(e), flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -175,7 +176,7 @@ export const profileCommand: Command = {
           content: removed
             ? `Removed **${name}**. ${left ? `You have ${left} character${left === 1 ? "" : "s"} left on the roster.` : "You have no characters on the roster now."}`
             : `**${name}** isn't one of your characters on the roster. \`/profile show\` lists them.`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -185,13 +186,13 @@ export const profileCommand: Command = {
         content: count
           ? `Removed all ${count} of your character${count === 1 ? "" : "s"}. You no longer appear on the roster.`
           : "You weren't on the roster.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
 
     if (sub !== "set") {
-      await interaction.reply({ content: "Unknown subcommand.", ephemeral: true });
+      await interaction.reply({ content: "Unknown subcommand.", flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -202,7 +203,7 @@ export const profileCommand: Command = {
     if (!isValidCharacterName(name)) {
       await interaction.reply({
         content: "Character names can only contain letters and numbers, 2 to 24 characters long.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -265,22 +266,22 @@ export const profileCommand: Command = {
           content:
             "That link isn't a character page. Leave **link** empty and Daeva will find you by name, " +
             "or paste a link from `aion2timers.com/armory` or `aion2.plaync.com/…/characters/…`.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       await interaction.editReply(await finish({ ...ref, name, level: null }));
       return;
     }
 
     const wait = lookupCooldown(userId);
     if (wait > 0) {
-      await interaction.reply({ content: `One moment: you can search again in ${wait} seconds.`, ephemeral: true });
+      await interaction.reply({ content: `One moment: you can search again in ${wait} seconds.`, flags: MessageFlags.Ephemeral });
       return;
     }
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const matches = await findCharacters(name, region, userId);
 
     if (matches === null) {

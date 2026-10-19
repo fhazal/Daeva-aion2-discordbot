@@ -1,4 +1,4 @@
-import { ChannelType, InteractionContextType, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
+import { ChannelType, InteractionContextType, PermissionFlagsBits, SlashCommandBuilder, MessageFlags } from "discord.js";
 import { charactersOf, createLink, fightCountFor, getLink, removeLink, setRecapChannel } from "../persistence/meter.js";
 import { dayWindow } from "../services/meter-daily.js";
 import type { Command } from "./types.js";
@@ -39,7 +39,7 @@ const command: Command = {
     if (sub === "link") {
       const token = createLink(interaction.user.id);
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: [
           "**Your Daeva Meter token.** Keep it private: anyone with it can upload as you.",
           "```",
@@ -56,7 +56,7 @@ const command: Command = {
     if (sub === "unlink") {
       const removed = removeLink(interaction.user.id);
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: removed
           ? "Done. Your token no longer works and your fights are off the DPS boards."
           : "You weren't linked. Use `/meter link` to start sharing.",
@@ -67,14 +67,14 @@ const command: Command = {
     if (sub === "status") {
       const link = getLink(interaction.user.id);
       if (!link) {
-        await interaction.reply({ ephemeral: true, content: "You're not linked yet. Use `/meter link` to get your token." });
+        await interaction.reply({ flags: MessageFlags.Ephemeral, content: "You're not linked yet. Use `/meter link` to get your token." });
         return;
       }
       const chars = charactersOf(interaction.user.id);
       const today = fightCountFor(interaction.user.id, dayWindow().start);
       const last = link.lastUploadAt ? `<t:${Math.floor(link.lastUploadAt / 1000)}:R>` : "no uploads yet";
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: [
           `**Linked** since <t:${Math.floor(link.createdAt / 1000)}:D>.`,
           `Last upload: ${last} · ${link.uploads} uploads in total.`,
@@ -87,13 +87,13 @@ const command: Command = {
 
     if (sub === "revoke") {
       if (!isAdmin) {
-        await interaction.reply({ ephemeral: true, content: "Only members with **Manage Server** can do that." });
+        await interaction.reply({ flags: MessageFlags.Ephemeral, content: "Only members with **Manage Server** can do that." });
         return;
       }
       const user = interaction.options.getUser("user", true);
       const removed = removeLink(user.id);
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: removed
           ? `Revoked ${user}'s meter token and removed their fights.`
           : `${user} isn't linked.`,
@@ -103,13 +103,13 @@ const command: Command = {
 
     if (sub === "recap") {
       if (!isAdmin || !interaction.guildId) {
-        await interaction.reply({ ephemeral: true, content: "Only members with **Manage Server** can do that." });
+        await interaction.reply({ flags: MessageFlags.Ephemeral, content: "Only members with **Manage Server** can do that." });
         return;
       }
       const channel = interaction.options.getChannel("channel");
       setRecapChannel(interaction.guildId, channel ? channel.id : null);
       await interaction.reply({
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
         content: channel
           ? `The daily DPS recap will be posted in ${channel}, 5 minutes before daily reset.`
           : "The daily DPS recap is turned off.",

@@ -3,6 +3,7 @@ import {
   InteractionContextType,
   PermissionFlagsBits,
   SlashCommandBuilder,
+  MessageFlags,
 } from "discord.js";
 import { getUpcoming } from "../core/schedule-engine.js";
 import { listRegions } from "../data/load.js";
@@ -43,7 +44,7 @@ export const panelCommand: Command = {
 
   async execute(interaction) {
     if (!interaction.guildId || !interaction.channelId) {
-      await interaction.reply({ content: "Guild only.", ephemeral: true });
+      await interaction.reply({ content: "Guild only.", flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -53,14 +54,14 @@ export const panelCommand: Command = {
     if (sub === "list") {
       const panels = store.listByGuild(interaction.guildId);
       if (panels.length === 0) {
-        await interaction.reply({ content: "No live panels configured.", ephemeral: true });
+        await interaction.reply({ content: "No live panels configured.", flags: MessageFlags.Ephemeral });
         return;
       }
       await interaction.reply({
         content: panels
           .map((p) => `• <#${p.channelId}> · \`${p.regionId}\` · msg \`${p.messageId}\``)
           .join("\n"),
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -71,7 +72,7 @@ export const panelCommand: Command = {
         content: removed
           ? "Live panel removed from this channel (message left in place — delete manually if needed)."
           : "No live panel in this channel.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -80,7 +81,7 @@ export const panelCommand: Command = {
     if (interaction.channel?.type === ChannelType.GuildVoice) {
       await interaction.reply({
         content: "Use a text channel for the panel.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -100,14 +101,14 @@ export const panelCommand: Command = {
 
     await interaction.reply({
       content: `Live panel for **${resolved.region.label}** — updates about every minute.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
 
     const channel = interaction.channel;
     if (!channel || !("send" in channel) || typeof channel.send !== "function") {
       await interaction.followUp({
         content: "Cannot post a panel in this channel type.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
