@@ -3,6 +3,10 @@ import { getUpcoming } from "../core/schedule-engine.js";
 import { logger } from "../lib/logger.js";
 import { fightsBetween, getDaily, markRecapPosted, pruneMeter, recapTargets, saveDaily, setRecapChannel } from "../persistence/meter.js";
 import { buildBoard, shortNumber, type DpsBoard } from "./meter-board.js";
+import { classColor, classEmoji } from "../discord/class-style.js";
+
+/** Time zone for the recap's date line (the community's). */
+const RECAP_TZ = process.env.RECAP_TZ ?? "Asia/Kuala_Lumpur";
 
 /**
  * "Today" for the DPS boards runs from one daily reset to the next, taken
@@ -54,23 +58,26 @@ export function recapEmbed(board: DpsBoard): EmbedBuilder | null {
   const medal = ["🥇", "🥈", "🥉"];
   const lines = board.top.map((p, i) => {
     const rank = medal[i] ?? `\`${String(i + 1).padStart(2, " ")}\``;
-    const cls = p.className ? ` · ${p.className}` : "";
-    return `${rank} **${p.name}**${cls} · **${shortNumber(p.dps)}** DPS · ${p.target}`;
+    return `${rank} ${classEmoji(p.className)} **${p.name}** · **${shortNumber(p.dps)}** DPS · ${p.target}`;
   });
+  const day = new Intl.DateTimeFormat("en-GB", { timeZone: RECAP_TZ, weekday: "long", day: "numeric", month: "long" }).format(
+    new Date(Date.parse(board.endsAt) - 60_000),
+  );
+  const reset = new Intl.DateTimeFormat("en-US", { timeZone: RECAP_TZ, hour: "numeric", minute: "2-digit" }).format(new Date(board.startsAt));
+  const strongest = board.classes[0];
   const embed = new EmbedBuilder()
-    .setColor(0xe8b04b)
+    .setColor(strongest ? classColor(strongest.className, 0xe8b04b) : 0xe8b04b)
     .setTitle("Daily DPS recap")
     .setURL(SITE)
-    .setDescription(lines.join("\n"))
+    .setDescription([`🗓️ ${day} · since ${reset} reset`, ...lines].join("\n"))
     .setFooter({
-      text: `${board.fights} boss and elite fights from ${board.players} players · Link your meter with /meter link`,
+      text: `⚔️ ${board.fights} boss and elite fights · 👥 ${board.players} players · Link your meter with /meter link`,
     })
     .setTimestamp(new Date(board.endsAt));
-  const strongest = board.classes[0];
   if (strongest) {
     embed.addFields({
       name: "Strongest class",
-      value: `**${strongest.className}** · ${shortNumber(strongest.average)} average · best ${shortNumber(strongest.best)} (${strongest.fights} fights)`,
+      value: `${classEmoji(strongest.className)} **${strongest.className}** · ${shortNumber(strongest.average)} average · best ${shortNumber(strongest.best)} (${strongest.fights} fights)`,
     });
   }
   return embed;
