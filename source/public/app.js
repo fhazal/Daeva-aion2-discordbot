@@ -699,7 +699,13 @@
         const who = el("div", "who");
         who.append(el("b", null, p.name), el("span", null, [p.className, p.target, mmss(p.duration)].filter(Boolean).join(" · ")));
         const val = el("div", "val");
-        val.append(el("b", null, shortNum(p.dps)), el("span", null, "DPS"));
+        const num = el("b", null, shortNum(p.dps));
+        if (p.verified) {
+          const v = el("i", "ver", "✓");
+          v.title = "Verified: the meter counted every hit on this boss (HP check)";
+          num.append(v);
+        }
+        val.append(num, el("span", null, "DPS"));
         row.append(el("span", "rank", String(i + 1)), classBadge(p.className), who, val);
         return row;
       }));

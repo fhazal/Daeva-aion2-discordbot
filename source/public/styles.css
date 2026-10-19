@@ -369,3 +369,6 @@ svg.lu { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: roun
   .footer .cols { grid-template-columns: 1fr 1fr; }
   .footer .cols > div:first-child { grid-column: 1 / -1; }
 }
+
+/* Verified fight: the meter counted every hit on the boss (HP check). */
+.dps-row .val .ver { display: inline-grid; place-items: center; width: 15px; height: 15px; margin-left: 5px; border-radius: 50%; font-style: normal; font-size: 10px; font-weight: 800; color: #0d1a12; background: #4cc38a; vertical-align: 2px; cursor: help; }

@@ -74,6 +74,9 @@ function init(d: Database.Database): void {
       last_posted_day TEXT
     );
   `);
+  // 0.3.7 meters prove a fight complete (HP check): keep that per fight.
+  const cols = new Set((d.prepare("PRAGMA table_info(meter_fights)").all() as Array<{ name: string }>).map((c) => c.name));
+  if (!cols.has("verified")) d.exec("ALTER TABLE meter_fights ADD COLUMN verified INTEGER NOT NULL DEFAULT 0");
 }
 
 /** For tests: use another database (e.g. in-memory). */
@@ -175,6 +178,8 @@ export type FightRow = {
   npcId: number | null;
   rank: string | null;
   bossKilled: boolean;
+  /** Every hit counted: kill, HP check ≥ 97%, no capture gaps (meter 0.3.7+). */
+  verified: boolean;
   startedAt: number;
   uploadedBy: string;
 };
@@ -204,14 +209,14 @@ export function addFight(f: FightRow, now = Date.now()): boolean {
       const ownBefore = dup.uploaded_by === dup.user_id;
       if (ownNow && !ownBefore) {
         d.prepare(
-          `UPDATE meter_fights SET dps = ?, damage = ?, duration = ?, class_name = COALESCE(?, class_name), uploaded_by = ?, received_at = ? WHERE id = ?`,
-        ).run(f.dps, f.damage, f.duration, f.className, f.uploadedBy, now, dup.id);
+          `UPDATE meter_fights SET dps = ?, damage = ?, duration = ?, class_name = COALESCE(?, class_name), verified = ?, uploaded_by = ?, received_at = ? WHERE id = ?`,
+        ).run(f.dps, f.damage, f.duration, f.className, f.verified ? 1 : 0, f.uploadedBy, now, dup.id);
       }
       return false;
     }
     d.prepare(
-      `INSERT INTO meter_fights (user_id, character, class_name, dps, damage, duration, target, npc_id, rank, boss_killed, started_at, received_at, uploaded_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO meter_fights (user_id, character, class_name, dps, damage, duration, target, npc_id, rank, boss_killed, verified, started_at, received_at, uploaded_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     ).run(
       f.userId,
       f.character,
@@ -223,6 +228,7 @@ export function addFight(f: FightRow, now = Date.now()): boolean {
       f.npcId,
       f.rank,
       f.bossKilled ? 1 : 0,
+      f.verified ? 1 : 0,
       f.startedAt,
       now,
       f.uploadedBy,
@@ -240,13 +246,14 @@ export type StoredFight = {
   target: string;
   rank: string | null;
   bossKilled: boolean;
+  verified: boolean;
   startedAt: number;
 };
 
 export function fightsBetween(from: number, to: number): StoredFight[] {
   const rows = open()
     .prepare(
-      `SELECT character, class_name, dps, duration, target, rank, boss_killed, started_at
+      `SELECT character, class_name, dps, duration, target, rank, boss_killed, verified, started_at
        FROM meter_fights WHERE started_at >= ? AND started_at < ? ORDER BY started_at`,
     )
     .all(from, to) as Array<{
@@ -257,6 +264,7 @@ export function fightsBetween(from: number, to: number): StoredFight[] {
     target: string;
     rank: string | null;
     boss_killed: number;
+    verified: number;
     started_at: number;
   }>;
   return rows.map((r) => ({
@@ -267,6 +275,7 @@ export function fightsBetween(from: number, to: number): StoredFight[] {
     target: r.target,
     rank: r.rank,
     bossKilled: r.boss_killed === 1,
+    verified: r.verified === 1,
     startedAt: r.started_at,
   }));
 }

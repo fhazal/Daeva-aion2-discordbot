@@ -14,6 +14,8 @@ export type DpsBoard = {
     target: string;
     duration: number;
     bossKilled: boolean;
+    /** Every hit counted (HP check), shown as a tick. */
+    verified: boolean;
   }>;
   classes: Array<{ className: string; average: number; best: number; fights: number }>;
 };
@@ -38,6 +40,7 @@ export function buildBoard(fights: StoredFight[], startsAt: number, endsAt: numb
       target: f.target,
       duration: Math.round(f.duration),
       bossKilled: f.bossKilled,
+      verified: f.verified,
     }));
 
   const byClass = new Map<string, { sum: number; best: number; fights: number }>();

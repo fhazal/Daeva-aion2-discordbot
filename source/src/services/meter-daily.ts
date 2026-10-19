@@ -58,7 +58,7 @@ export function recapEmbed(board: DpsBoard): EmbedBuilder | null {
   const medal = ["🥇", "🥈", "🥉"];
   const lines = board.top.map((p, i) => {
     const rank = medal[i] ?? `\`${String(i + 1).padStart(2, " ")}\``;
-    return `${rank} ${classEmoji(p.className)} **${p.name}** · **${shortNumber(p.dps)}** DPS · ${p.target}`;
+    return `${rank} ${classEmoji(p.className)} **${p.name}** · **${shortNumber(p.dps)}** DPS${p.verified ? " ✅" : ""} · ${p.target}`;
   });
   const day = new Intl.DateTimeFormat("en-GB", { timeZone: RECAP_TZ, weekday: "long", day: "numeric", month: "long" }).format(
     new Date(Date.parse(board.endsAt) - 60_000),
@@ -71,7 +71,7 @@ export function recapEmbed(board: DpsBoard): EmbedBuilder | null {
     .setURL(SITE)
     .setDescription([`🗓️ ${day} · since ${reset} reset`, ...lines].join("\n"))
     .setFooter({
-      text: `⚔️ ${board.fights} boss and elite fights · 👥 ${board.players} players · Link your meter with /meter link`,
+      text: `${board.top.some((p) => p.verified) ? "✅ every hit counted · " : ""}⚔️ ${board.fights} boss and elite fights · 👥 ${board.players} players · Link your meter with /meter link`,
     })
     .setTimestamp(new Date(board.endsAt));
   if (strongest) {

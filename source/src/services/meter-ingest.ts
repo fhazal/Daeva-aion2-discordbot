@@ -13,6 +13,8 @@ export const MAX_DURATION_S = 30 * 60;
 const MAX_ROWS = 24;
 const MAX_DPS = 3_000_000;
 const HP_SLACK = 1.25;
+/** Verified ✓: the meter saw at least this share of the boss's HP. */
+export const VERIFIED_MIN = 0.97;
 const NAME = /^[\p{L}\p{N}]{2,24}$/u;
 
 const CLASSES: Record<string, string> = {
@@ -75,7 +77,10 @@ export async function ingestUpload(
   const rec = body.record;
   if (!isObj(rec)) return bad("Missing record");
 
-  const duration = num(rec.duration);
+  // Meter 0.3.7+: "boss fight" clock. Players' damage covers every enemy from
+  // the first hit on the boss to the kill, and DPS divides by that time.
+  const bossClock = rec.clock === "boss" && num(rec.clock_secs) != null && num(rec.clock_npc) != null;
+  const duration = bossClock ? num(rec.clock_secs) : num(rec.duration);
   if (duration == null) return bad("Missing duration");
   if (duration < MIN_DURATION_S) return ignored("Fight shorter than 20 seconds");
   if (duration > MAX_DURATION_S) return ignored("Fight longer than 30 minutes");
@@ -86,9 +91,11 @@ export async function ingestUpload(
   if (startedAt < now - 36 * 60 * 60 * 1000 || startedAt > now + 5 * 60 * 1000) return ignored("Fight time out of range");
 
   const target = rec.target;
-  if (!isObj(target) || typeof target.name !== "string" || !target.name.trim()) return ignored("No target");
-  const targetName = target.name.trim().slice(0, 80);
-  const npcId = num(target.npc_id);
+  const clockName = typeof rec.clock_target_name === "string" ? rec.clock_target_name.trim() : "";
+  if (!bossClock && (!isObj(target) || typeof target.name !== "string" || !target.name.trim())) return ignored("No target");
+  const targetName = (bossClock && clockName ? clockName : String(isObj(target) ? target.name : "")).trim().slice(0, 80);
+  if (!targetName) return ignored("No target");
+  const npcId = bossClock ? num(rec.clock_npc) : isObj(target) ? num(target.npc_id) : null;
   if (npcId == null || !Number.isInteger(npcId)) return ignored("Unknown monster");
   const rank = await rankOf(npcId);
   if (!isBossOrElite(rank)) return ignored("Not a boss or elite fight");
@@ -102,7 +109,7 @@ export async function ingestUpload(
 
   type Row = { name: string; className: string | null; damage: number; onTarget: number | null; isSelf: boolean };
   const rows: Row[] = [];
-  const targetId = num(target.id);
+  const targetId = bossClock ? num(rec.clock_target) : isObj(target) ? num(target.id) : null;
   for (const p of players) {
     if (!isObj(p) || typeof p.name !== "string") continue;
     const name = p.name.trim();
@@ -120,11 +127,13 @@ export async function ingestUpload(
   if (!self) return ignored("Your own row is missing");
 
   // Plausibility: damage on the monster can't be far above its HP.
-  const maxHp = num(target.max_hp);
+  const maxHp = !bossClock && isObj(target) ? num(target.max_hp) : null;
   if (maxHp != null && maxHp > 0) {
     const onTarget = rows.reduce((sum, r) => sum + (r.onTarget ?? 0), 0);
     if (onTarget > maxHp * HP_SLACK) return bad("Damage is higher than the monster's HP", 422);
   }
+  const counted = num(rec.clock_counted);
+  if (bossClock && counted != null && counted > HP_SLACK) return bad("Damage is higher than the monster's HP", 422);
   for (const r of rows) {
     if (r.damage / duration > MAX_DPS) return bad("DPS is implausibly high", 422);
   }
@@ -133,8 +142,12 @@ export async function ingestUpload(
   if (owner && owner !== userId) return bad("This character is linked to another member", 409);
   claimCharacter(userId, selfName, self.className, now);
 
-  const base = { duration, target: targetName, npcId, rank, bossKilled: rec.boss_killed === true, startedAt };
-  let counted = 0;
+  // Verified ✓: killed, the damage seen on the boss covers its HP, and no
+  // game traffic was lost during the fight.
+  const bossKilled = rec.boss_killed === true;
+  const verified = bossClock && bossKilled && counted != null && counted >= VERIFIED_MIN && num(rec.gaps) === 0;
+  const base = { duration, target: targetName, npcId, rank, bossKilled, verified, startedAt };
+  let stored = 0;
   for (const r of rows) {
     const isSelf = r === self;
     const rowOwner = isSelf ? userId : characterOwner(r.name);
@@ -152,8 +165,8 @@ export async function ingestUpload(
       },
       now,
     );
-    if (added) counted++;
+    if (added) stored++;
   }
   noteUpload(userId, now);
-  return counted > 0 ? ok(counted) : ignored("Already counted");
+  return stored > 0 ? ok(stored) : ignored("Already counted");
 }

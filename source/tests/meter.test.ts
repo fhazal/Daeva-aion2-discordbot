@@ -61,6 +61,38 @@ describe("ingestUpload", () => {
     expect(f[0]?.rank).toBe("Legendary");
   });
 
+  it("uses the meter's boss-fight clock and marks fully counted kills verified", async () => {
+    createLink("u1", NOW);
+    const boss = (extra: Record<string, unknown>) => {
+      const u = upload("BajuBesi", [{ name: "BajuBesi", dmg: 4_800_000, is_self: true }], { duration: 300, target: "Pack of Trash" });
+      Object.assign(u.record, { clock: "boss", clock_secs: 240, clock_npc: 2000002, clock_target: 555, clock_target_name: "Faithful Rajit", gaps: 0 }, extra);
+      return u;
+    };
+    // Boss fight time, not the whole fight; ranked under the boss, not the last target.
+    expect((await ingestUpload("u1", boss({ clock_counted: 0.998 }), rankOf, NOW)).status).toBe(200);
+    let f = fightsBetween(0, NOW + 1);
+    expect(f[0]?.dps).toBe(20_000);
+    expect(f[0]?.target).toBe("Faithful Rajit");
+    expect(f[0]?.verified).toBe(true);
+    // Missed hits or lost traffic: still counted, but no tick.
+    useMeterDatabase(new Database(":memory:"));
+    createLink("u1", NOW);
+    await ingestUpload("u1", boss({ clock_counted: 0.92 }), rankOf, NOW);
+    await ingestUpload("u1", boss({ clock_counted: 1, gaps: 3, started_unix: (NOW - 3 * 60_000) / 1000 }), rankOf, NOW);
+    f = fightsBetween(0, NOW + 1);
+    expect(f).toHaveLength(2);
+    expect(f.every((x) => !x.verified)).toBe(true);
+    // Impossible damage on the boss is refused.
+    expect((await ingestUpload("u1", boss({ clock_counted: 1.6, started_unix: (NOW - 60_000) / 1000 }), rankOf, NOW)).status).toBe(422);
+    // Older meters (no clock) still count, unverified.
+    useMeterDatabase(new Database(":memory:"));
+    createLink("u1", NOW);
+    await ingestUpload("u1", upload("BajuBesi", [{ name: "BajuBesi", dmg: 4_820_000, is_self: true }]), rankOf, NOW);
+    f = fightsBetween(0, NOW + 1);
+    expect(f[0]?.dps).toBe(48_200);
+    expect(f[0]?.verified).toBe(false);
+  });
+
   it("answers the meter's connection test", async () => {
     createLink("u1", NOW);
     const r = await ingestUpload("u1", { type: "ping" }, rankOf, NOW);
@@ -112,7 +144,7 @@ describe("ingestUpload", () => {
 
 describe("buildBoard", () => {
   it("ranks each player's best fight and averages classes", () => {
-    const f = (character: string, className: string, dps: number) => ({ character, className, dps, duration: 100, target: "Kaira", rank: "Legendary", bossKilled: true, startedAt: NOW });
+    const f = (character: string, className: string, dps: number) => ({ character, className, dps, duration: 100, target: "Kaira", rank: "Legendary", bossKilled: true, verified: false, startedAt: NOW });
     const board = buildBoard([f("A", "Gladiator", 30_000), f("A", "Gladiator", 50_000), f("B", "Cleric", 20_000), f("C", "Gladiator", 40_000)], 0, 1, "2026-10-19");
     expect(board.top.map((t) => [t.name, t.dps])).toEqual([["A", 50_000], ["C", 40_000], ["B", 20_000]]);
     expect(board.classes[0]).toEqual({ className: "Gladiator", average: 40_000, best: 50_000, fights: 3 });
