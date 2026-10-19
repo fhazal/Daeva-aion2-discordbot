@@ -59,7 +59,7 @@ Follows the live Gartua feed and pings 10 minutes before the spawn. Trusted role
 <td valign="top">
 
 ### 🛡️ Legion roster
-`/profile set` looks up a member's own character, shows a profile card, and keeps your legion and player roles in sync automatically.
+`/profile set` adds a member's characters (up to 5 each, alts welcome), shows a profile card for each, and keeps legion and player roles in sync automatically.
 
 </td>
 <td valign="top">
@@ -83,7 +83,7 @@ Follows the live Gartua feed and pings 10 minutes before the spawn. Trusted role
 | `/alert` | Role pings before chosen events |
 | `/gartua` | Immortal Gartua tracking: `status` for everyone, `set` and `channel` for trusted roles |
 | `/server` | Asia server status and character-creation state |
-| `/profile` | Opt-in roster and role sync |
+| `/profile` | Opt-in roster (up to 5 characters each) and role sync: `set`, `show`, `remove [name]` |
 | `/meter` | Daeva Meter sharing: `link`, `unlink`, `status` for everyone; `revoke` and `recap` for admins |
 | `/guide` | Quick help post |
 | `/config` | Default region and role → region maps |

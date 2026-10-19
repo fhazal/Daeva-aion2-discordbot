@@ -24,6 +24,14 @@ export function isLegionMember(legion: string | null): boolean {
   return Boolean(legion && LEGION_NAME && legion.toLowerCase() === LEGION_NAME.toLowerCase());
 }
 
+/**
+ * The legion that decides a member's roles across all their characters: ours
+ * if any character is in it, otherwise the first legion found (or none).
+ */
+export function memberLegion(legions: Array<string | null>): string | null {
+  return legions.find((l) => isLegionMember(l)) ?? legions.find((l) => l) ?? null;
+}
+
 /** "fiist" → "Fiist" for display. */
 export function displayLegion(legion: string): string {
   return legion.charAt(0).toUpperCase() + legion.slice(1);
@@ -100,16 +108,21 @@ export function legionLine(legion: string | null, roles: RoleChanges): string {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Re-checks every roster member once, one lookup at a time. */
+/** Re-checks every roster character once, one lookup at a time, then each member's roles. */
 async function refreshRoster(client: Client): Promise<void> {
   const entries = listRosterEntries();
   let updated = 0;
+  // guild -> member -> legions of all their characters
+  const members = new Map<string, Map<string, Array<string | null>>>();
+  const note = (guildId: string, userId: string, legion: string | null) => {
+    const g = members.get(guildId) ?? new Map<string, Array<string | null>>();
+    g.set(userId, [...(g.get(userId) ?? []), legion]);
+    members.set(guildId, g);
+  };
 
   for (const entry of entries) {
     const ref = characterRef(entry.profileUrl);
-    if (!ref) continue;
-
-    const info = await fetchCharacterInfo(ref.serverId, ref.characterId, ref.region);
+    const info = ref ? await fetchCharacterInfo(ref.serverId, ref.characterId, ref.region) : null;
     if (info) {
       upsertRosterEntry({
         ...entry,
@@ -122,15 +135,18 @@ async function refreshRoster(client: Client): Promise<void> {
         imageUrl: info.imageUrl ?? entry.imageUrl,
       });
       updated++;
-
-      const guild = await client.guilds.fetch(entry.guildId).catch(() => null);
-      if (guild) await syncRoles(guild, entry.userId, info.legion, true);
     }
-
-    await sleep(GAP_BETWEEN_LOOKUPS_MS);
+    note(entry.guildId, entry.userId, info ? info.legion : entry.legion);
+    if (ref) await sleep(GAP_BETWEEN_LOOKUPS_MS);
   }
 
-  logger.info({ members: entries.length, updated }, "Legion roster refreshed");
+  for (const [guildId, users] of members) {
+    const guild = await client.guilds.fetch(guildId).catch(() => null);
+    if (!guild) continue;
+    for (const [userId, legions] of users) await syncRoles(guild, userId, memberLegion(legions), true);
+  }
+
+  logger.info({ characters: entries.length, updated }, "Legion roster refreshed");
 }
 
 /** Refreshes the roster 15 minutes after start, then once a day. */

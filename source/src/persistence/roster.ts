@@ -1,10 +1,14 @@
 import Database from "better-sqlite3";
 
 /**
- * Opt-in legion roster. Members add themselves with /profile set in Discord;
- * aion2.bajubesi.org lists them with links to their character pages. Only the
- * member's own character is stored, and only because they asked.
+ * Opt-in legion roster. Members add their characters (up to five each, alts
+ * included) with /profile set in Discord; aion2.bajubesi.org lists every
+ * character with links to its pages. Only characters a member added
+ * themselves are stored, and each character belongs to one member.
  */
+
+/** Characters one member may have on the roster. */
+export const MAX_CHARACTERS = 5;
 
 /** Asia servers, from the official server list. */
 const SERVER_NAMES: Record<number, string> = {
@@ -70,38 +74,78 @@ const NAME = /^[\p{L}\p{N}]{2,24}$/u;
 
 let db: Database.Database | null = null;
 
-function open(): Database.Database {
-  if (db) return db;
-  db = new Database(process.env.DATABASE_PATH ?? "/state/bot.sqlite");
-  db.pragma("journal_mode = WAL");
-  db.pragma("busy_timeout = 5000");
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS legion_roster (
+/** A character's identity: server and character ID from its profile link (names can change). */
+export function characterKey(profileUrl: string): string {
+  const ref = characterRef(profileUrl);
+  return ref ? `${ref.serverId}/${ref.characterId}` : profileUrl;
+}
+
+const COLUMNS = `
       guild_id TEXT NOT NULL,
       user_id TEXT NOT NULL,
+      character_key TEXT NOT NULL,
       character_name TEXT NOT NULL,
       class_name TEXT NOT NULL,
       server_id INTEGER NOT NULL,
       region TEXT NOT NULL,
       profile_url TEXT NOT NULL,
+      level INTEGER,
+      combat_power INTEGER,
+      item_level INTEGER,
+      legion TEXT,
+      image_url TEXT,
       updated_at TEXT NOT NULL,
-      PRIMARY KEY (guild_id, user_id)
-    );
-  `);
-  const columns = new Set(
-    (db.prepare("PRAGMA table_info(legion_roster)").all() as Array<{ name: string }>).map((c) => c.name),
-  );
-  const wanted: Array<[string, string]> = [
-    ["level", "INTEGER"],
-    ["combat_power", "INTEGER"],
-    ["item_level", "INTEGER"],
-    ["legion", "TEXT"],
-    ["image_url", "TEXT"],
-  ];
-  for (const [name, type] of wanted) {
-    if (!columns.has(name)) db.exec(`ALTER TABLE legion_roster ADD COLUMN ${name} ${type}`);
-  }
+      PRIMARY KEY (guild_id, character_key)`;
+
+function open(): Database.Database {
+  if (db) return db;
+  db = new Database(process.env.DATABASE_PATH ?? "/state/bot.sqlite");
+  migrate(db);
   return db;
+}
+
+/** For tests: use another database (e.g. in-memory). */
+export function useRosterDatabase(database: Database.Database): void {
+  db = database;
+  migrate(database);
+}
+
+function migrate(d: Database.Database): void {
+  d.pragma("journal_mode = WAL");
+  d.pragma("busy_timeout = 5000");
+  const exists = d.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'legion_roster'").get();
+  if (!exists) {
+    d.exec(`CREATE TABLE legion_roster (${COLUMNS});`);
+  } else {
+    const columns = new Set((d.prepare("PRAGMA table_info(legion_roster)").all() as Array<{ name: string }>).map((c) => c.name));
+    if (!columns.has("character_key")) {
+      // One row per member -> one row per character. The old table is kept
+      // as legion_roster_backup in case anything needs restoring.
+      for (const [name, type] of [["level", "INTEGER"], ["combat_power", "INTEGER"], ["item_level", "INTEGER"], ["legion", "TEXT"], ["image_url", "TEXT"]]) {
+        if (!columns.has(name!)) d.exec(`ALTER TABLE legion_roster ADD COLUMN ${name} ${type}`);
+      }
+      const rows = d.prepare("SELECT * FROM legion_roster").all() as Array<Record<string, unknown>>;
+      d.transaction(() => {
+        d.exec("DROP TABLE IF EXISTS legion_roster_backup");
+        d.exec("ALTER TABLE legion_roster RENAME TO legion_roster_backup");
+        d.exec(`CREATE TABLE legion_roster (${COLUMNS});`);
+        const insert = d.prepare(
+          `INSERT OR IGNORE INTO legion_roster
+             (guild_id, user_id, character_key, character_name, class_name, server_id, region, profile_url,
+              level, combat_power, item_level, legion, image_url, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        );
+        for (const r of rows) {
+          insert.run(
+            r.guild_id, r.user_id, characterKey(String(r.profile_url)), r.character_name, r.class_name, r.server_id,
+            r.region, r.profile_url, r.level ?? null, r.combat_power ?? null, r.item_level ?? null, r.legion ?? null,
+            r.image_url ?? null, r.updated_at,
+          );
+        }
+      })();
+    }
+  }
+  d.exec("CREATE INDEX IF NOT EXISTS idx_legion_roster_user ON legion_roster (guild_id, user_id)");
 }
 
 export function serverName(serverId: number): string {
@@ -160,15 +204,16 @@ const SELECT_ENTRY = `
          item_level as itemLevel, legion, image_url as imageUrl, updated_at as updatedAt
   FROM legion_roster`;
 
+/** Adds a character or refreshes it (matched by its profile link, so renames are followed). */
 export function upsertRosterEntry(entry: Omit<RosterEntry, "updatedAt">): RosterEntry {
   const updatedAt = new Date().toISOString();
   open().prepare(
     `INSERT INTO legion_roster
-       (guild_id, user_id, character_name, class_name, server_id, region, profile_url,
+       (guild_id, user_id, character_key, character_name, class_name, server_id, region, profile_url,
         level, combat_power, item_level, legion, image_url, updated_at)
-     VALUES (@guildId, @userId, @characterName, @className, @serverId, @region, @profileUrl,
+     VALUES (@guildId, @userId, @characterKey, @characterName, @className, @serverId, @region, @profileUrl,
              @level, @combatPower, @itemLevel, @legion, @imageUrl, @updatedAt)
-     ON CONFLICT(guild_id, user_id) DO UPDATE SET
+     ON CONFLICT(guild_id, character_key) DO UPDATE SET
        character_name = excluded.character_name,
        class_name = excluded.class_name,
        server_id = excluded.server_id,
@@ -180,23 +225,41 @@ export function upsertRosterEntry(entry: Omit<RosterEntry, "updatedAt">): Roster
        legion = excluded.legion,
        image_url = excluded.image_url,
        updated_at = excluded.updated_at`,
-  ).run({ ...entry, updatedAt });
+  ).run({ ...entry, characterKey: characterKey(entry.profileUrl), updatedAt });
   return { ...entry, updatedAt };
 }
 
-export function getRosterEntry(guildId: string, userId: string): RosterEntry | null {
-  const row = open().prepare(`${SELECT_ENTRY} WHERE guild_id = ? AND user_id = ?`).get(guildId, userId) as
-    | RosterEntry
-    | undefined;
-  return row ?? null;
+/** Who has this character on the roster, if anyone. */
+export function characterOwner(guildId: string, profileUrl: string): string | null {
+  const row = open()
+    .prepare("SELECT user_id FROM legion_roster WHERE guild_id = ? AND character_key = ?")
+    .get(guildId, characterKey(profileUrl)) as { user_id: string } | undefined;
+  return row?.user_id ?? null;
+}
+
+/** A member's characters, strongest first. */
+export function listMemberCharacters(guildId: string, userId: string): RosterEntry[] {
+  return open()
+    .prepare(`${SELECT_ENTRY} WHERE guild_id = ? AND user_id = ? ORDER BY (combat_power IS NULL), combat_power DESC, character_name COLLATE NOCASE`)
+    .all(guildId, userId) as RosterEntry[];
 }
 
 export function listRosterEntries(): RosterEntry[] {
   return open().prepare(SELECT_ENTRY).all() as RosterEntry[];
 }
 
-export function removeRosterEntry(guildId: string, userId: string): boolean {
-  return open().prepare("DELETE FROM legion_roster WHERE guild_id = ? AND user_id = ?").run(guildId, userId).changes > 0;
+/** Removes one of a member's characters by name. */
+export function removeRosterCharacter(guildId: string, userId: string, name: string): boolean {
+  return (
+    open()
+      .prepare("DELETE FROM legion_roster WHERE guild_id = ? AND user_id = ? AND character_name = ? COLLATE NOCASE")
+      .run(guildId, userId, name.trim()).changes > 0
+  );
+}
+
+/** Removes all of a member's characters; returns how many. */
+export function removeMemberCharacters(guildId: string, userId: string): number {
+  return open().prepare("DELETE FROM legion_roster WHERE guild_id = ? AND user_id = ?").run(guildId, userId).changes;
 }
 
 /** Public view for the website: no Discord IDs. Strongest first. */

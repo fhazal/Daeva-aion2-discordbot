@@ -72,6 +72,12 @@ export async function createClient(): Promise<{
 
 async function handleInteraction(interaction: Interaction): Promise<void> {
   try {
+    if (interaction.isAutocomplete()) {
+      const command = interaction.client.commands.get(interaction.commandName);
+      if (command?.autocomplete) await command.autocomplete(interaction);
+      else await interaction.respond([]);
+      return;
+    }
     if (interaction.isChatInputCommand()) {
       const command = interaction.client.commands.get(interaction.commandName);
       if (!command) {

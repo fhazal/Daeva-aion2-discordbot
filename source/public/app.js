@@ -593,7 +593,7 @@
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const { members, legion } = await res.json();
       const ours = typeof legion === "string" ? legion.toLowerCase() : "";
-      roster.count.textContent = members.length === 1 ? "1 member" : `${members.length} members`;
+      roster.count.textContent = members.length === 1 ? "1 character" : `${members.length} characters`;
       roster.empty.hidden = members.length !== 0;
       roster.list.hidden = members.length === 0;
       roster.list.replaceChildren(...members.map((m) => {

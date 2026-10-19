@@ -10,12 +10,15 @@ import {
 } from "discord.js";
 import {
   armoryUrl,
+  characterOwner,
   characterRef,
-  getRosterEntry,
   isValidCharacterName,
+  listMemberCharacters,
+  MAX_CHARACTERS,
   officialProfileUrl,
   parseProfileUrl,
-  removeRosterEntry,
+  removeMemberCharacters,
+  removeRosterCharacter,
   serverName,
   upsertRosterEntry,
   type RosterEntry,
@@ -27,7 +30,7 @@ import {
   SEARCH_REGIONS,
   type CharacterMatch,
 } from "../services/character-search.js";
-import { displayLegion, isLegionMember, legionLine, syncRoles } from "../services/legion.js";
+import { displayLegion, isLegionMember, legionLine, memberLegion, syncRoles } from "../services/legion.js";
 import type { Command } from "./types.js";
 
 const SITE = "https://aion2.bajubesi.org/#players";
@@ -77,14 +80,14 @@ function profileCard(e: RosterEntry, note?: string) {
 export const profileCommand: Command = {
   data: new SlashCommandBuilder()
     .setName("profile")
-    .setDescription("Add your AION 2 character to the legion roster on aion2.bajubesi.org")
+    .setDescription("Add your AION 2 characters (up to 5) to the legion roster on aion2.bajubesi.org")
     .setContexts(InteractionContextType.Guild)
     .addSubcommand((sub) =>
       sub
         .setName("set")
-        .setDescription("Add or refresh your character on the roster")
+        .setDescription("Add a character (up to 5, alts welcome) or refresh one already on the roster")
         .addStringOption((opt) =>
-          opt.setName("name").setDescription("Your character name").setRequired(true).setMinLength(2).setMaxLength(24),
+          opt.setName("name").setDescription("The character's name").setRequired(true).setMinLength(2).setMaxLength(24),
         )
         .addStringOption((opt) =>
           opt
@@ -101,8 +104,29 @@ export const profileCommand: Command = {
             .setMaxLength(300),
         ),
     )
-    .addSubcommand((sub) => sub.setName("show").setDescription("Show your roster entry"))
-    .addSubcommand((sub) => sub.setName("remove").setDescription("Remove your character from the roster")),
+    .addSubcommand((sub) => sub.setName("show").setDescription("Show your characters on the roster"))
+    .addSubcommand((sub) =>
+      sub
+        .setName("remove")
+        .setDescription("Remove a character from the roster (leave the name empty to remove all of yours)")
+        .addStringOption((opt) =>
+          opt.setName("name").setDescription("Which character (empty = all of them)").setRequired(false).setAutocomplete(true),
+        ),
+    ),
+
+  // Suggests the member's own characters for /profile remove.
+  async autocomplete(interaction) {
+    if (!interaction.guildId) {
+      await interaction.respond([]);
+      return;
+    }
+    const typed = String(interaction.options.getFocused()).toLowerCase();
+    const names = listMemberCharacters(interaction.guildId, interaction.user.id)
+      .map((e) => e.characterName)
+      .filter((n) => n.toLowerCase().includes(typed))
+      .slice(0, 25);
+    await interaction.respond(names.map((n) => ({ name: n, value: n })));
+  },
 
   async execute(interaction) {
     if (!interaction.guildId) {
@@ -114,21 +138,50 @@ export const profileCommand: Command = {
     const userId = interaction.user.id;
     const sub = interaction.options.getSubcommand();
 
+    /** Re-applies the member's roles from all their remaining characters. */
+    const resync = async () => {
+      if (!interaction.guild) return null;
+      const chars = listMemberCharacters(guildId, userId);
+      return syncRoles(interaction.guild, userId, memberLegion(chars.map((c) => c.legion)), chars.length > 0);
+    };
+
     if (sub === "show") {
-      const e = getRosterEntry(guildId, userId);
-      if (!e) {
-        await interaction.reply({ content: "You're not on the roster yet. Add yourself with `/profile set`.", ephemeral: true });
+      const chars = listMemberCharacters(guildId, userId);
+      if (chars.length === 0) {
+        await interaction.reply({ content: "You're not on the roster yet. Add a character with `/profile set`.", ephemeral: true });
         return;
       }
-      await interaction.reply({ ...profileCard(e), ephemeral: true });
+      // One card per character (Discord allows up to 5 embeds and 5 button rows).
+      const cards = chars.slice(0, MAX_CHARACTERS).map((e) => profileCard(e));
+      await interaction.reply({
+        content: `Your characters on the roster (${chars.length} of ${MAX_CHARACTERS}):`,
+        embeds: cards.flatMap((c) => c.embeds),
+        components: cards.flatMap((c) => c.components),
+        ephemeral: true,
+      });
       return;
     }
 
     if (sub === "remove") {
-      const removed = removeRosterEntry(guildId, userId);
-      if (removed && interaction.guild) await syncRoles(interaction.guild, userId, null, false);
+      const name = interaction.options.getString("name")?.trim();
+      if (name) {
+        const removed = removeRosterCharacter(guildId, userId, name);
+        if (removed) await resync();
+        const left = listMemberCharacters(guildId, userId).length;
+        await interaction.reply({
+          content: removed
+            ? `Removed **${name}**. ${left ? `You have ${left} character${left === 1 ? "" : "s"} left on the roster.` : "You have no characters on the roster now."}`
+            : `**${name}** isn't one of your characters on the roster. \`/profile show\` lists them.`,
+          ephemeral: true,
+        });
+        return;
+      }
+      const count = removeMemberCharacters(guildId, userId);
+      if (count && interaction.guild) await syncRoles(interaction.guild, userId, null, false);
       await interaction.reply({
-        content: removed ? "Removed. Your character no longer appears on the roster." : "You weren't on the roster.",
+        content: count
+          ? `Removed all ${count} of your character${count === 1 ? "" : "s"}. You no longer appear on the roster.`
+          : "You weren't on the roster.",
         ephemeral: true,
       });
       return;
@@ -153,8 +206,25 @@ export const profileCommand: Command = {
 
     /** Reads official details, saves the entry, syncs the legion role and builds the reply. */
     const finish = async (found: Found) => {
+      const profileUrl = officialProfileUrl(found.serverId, found.characterId, found.region);
+      // Each character belongs to one member, and each member has up to five.
+      const owner = characterOwner(guildId, profileUrl);
+      if (owner && owner !== userId) {
+        return {
+          content: `**${found.name}** is already on the roster for another member. If it's yours, ask an officer to sort it out.`,
+          embeds: [],
+          components: [],
+        };
+      }
+      const existing = owner === userId;
+      if (!existing && listMemberCharacters(guildId, userId).length >= MAX_CHARACTERS) {
+        return {
+          content: `You already have ${MAX_CHARACTERS} characters on the roster. Remove one with \`/profile remove\` first.`,
+          embeds: [],
+          components: [],
+        };
+      }
       const info = await fetchCharacterInfo(found.serverId, found.characterId, found.region);
-      const previous = getRosterEntry(guildId, userId);
       const entry = upsertRosterEntry({
         guildId,
         userId,
@@ -162,21 +232,22 @@ export const profileCommand: Command = {
         className: info?.className ?? "Unknown",
         serverId: found.serverId,
         region: found.region,
-        profileUrl: officialProfileUrl(found.serverId, found.characterId, found.region),
+        profileUrl,
         level: info?.level ?? found.level,
         combatPower: info?.combatPower ?? null,
         itemLevel: info?.itemLevel ?? null,
         legion: info?.legion ?? null,
         imageUrl: info?.imageUrl ?? null,
       });
-      const roles = interaction.guild
-        ? await syncRoles(interaction.guild, userId, entry.legion, true)
-        : ({ legion: "not-configured", player: "not-configured" } as const);
+      const roles = (await resync()) ?? ({ legion: "not-configured", player: "not-configured" } as const);
       const note = info
         ? legionLine(entry.legion, roles)
         : "Couldn't read your official details just now; they'll fill in during the daily refresh.";
+      const total = listMemberCharacters(guildId, userId).length;
       return {
-        content: previous ? "✅ Your roster entry is up to date." : "✅ You're on the roster.",
+        content: existing
+          ? `✅ **${entry.characterName}** is up to date.`
+          : `✅ **${entry.characterName}** is on the roster (${total} of ${MAX_CHARACTERS} characters).`,
         ...profileCard(entry, note),
       };
     };
