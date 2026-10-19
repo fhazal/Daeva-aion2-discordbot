@@ -9,7 +9,8 @@ import { createHash, randomBytes } from "node:crypto";
  * each day's final results for a year.
  */
 
-export const FIGHT_KEEP_MS = 30 * 24 * 60 * 60 * 1000;
+// Two months, so the website's monthly board always has the whole month.
+export const FIGHT_KEEP_MS = 62 * 24 * 60 * 60 * 1000;
 export const DAILY_KEEP_MS = 365 * 24 * 60 * 60 * 1000;
 const TOKEN_PREFIX = "dvm_";
 

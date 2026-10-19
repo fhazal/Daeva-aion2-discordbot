@@ -11,7 +11,7 @@ import { getGartuaStore } from "../persistence/store.js";
 import { getCachedLiveGartuaEstimate } from "../services/live-gartua.js";
 import { readMirrored, readMirroredImage } from "../services/gaming-tools-mirror.js";
 import { userForToken } from "../persistence/meter.js";
-import { dpsTodayJson } from "../services/meter-daily.js";
+import { dpsMonthJson, dpsTodayJson } from "../services/meter-daily.js";
 import { allowUpload, ingestUpload } from "../services/meter-ingest.js";
 import { npcRank } from "../services/npc-ranks.js";
 
@@ -414,6 +414,11 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
 
   if (url.pathname === "/api/dps-today") {
     sendJson(res, 200, dpsTodayJson(), head);
+    return;
+  }
+
+  if (url.pathname === "/api/dps-month") {
+    sendJson(res, 200, dpsMonthJson(), head);
     return;
   }
 

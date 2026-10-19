@@ -3,6 +3,7 @@ import { getUpcoming } from "../core/schedule-engine.js";
 import { logger } from "../lib/logger.js";
 import { fightsBetween, getDaily, markRecapPosted, pruneMeter, recapTargets, saveDaily, setRecapChannel, setRecapMessage } from "../persistence/meter.js";
 import { buildBoard, shortNumber, type DpsBoard } from "./meter-board.js";
+import { monthStart } from "./meter-month.js";
 import { classColor, classEmoji } from "../discord/class-style.js";
 
 /** Time zone for the recap's date line (the community's). */
@@ -49,6 +50,24 @@ export function dpsTodayJson(now = Date.now()): string {
   if (cached && now - cached.at < BOARD_CACHE_MS) return cached.body;
   const body = JSON.stringify(boardFor(dayWindow(now)));
   cached = { at: now, body };
+  return body;
+}
+
+/** The game month containing `now`: from the daily reset on the 1st until the next reset. */
+export function monthWindow(now = Date.now()): DayWindow {
+  const today = dayWindow(now);
+  const m = monthStart(today.start, RECAP_TZ);
+  return { start: m.start, end: today.end, day: m.label };
+}
+
+let cachedMonth: { at: number; body: string } | null = null;
+
+/** JSON for /api/dps-month (the website's boards), cached for a minute. */
+export function dpsMonthJson(now = Date.now()): string {
+  if (cachedMonth && now - cachedMonth.at < BOARD_CACHE_MS) return cachedMonth.body;
+  const w = monthWindow(now);
+  const body = JSON.stringify(buildBoard(fightsBetween(w.start, w.end), w.start, w.end, w.day));
+  cachedMonth = { at: now, body };
   return body;
 }
 

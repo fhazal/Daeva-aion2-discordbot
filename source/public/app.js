@@ -81,7 +81,19 @@
     return span;
   }
   function classBadge(className) {
-    const key = String(className || "").toLowerCase().replace(/[^a-z]/g, "");
+    let key = String(className || "").toLowerCase().replace(/[^a-z]/g, "");
+    if (key === "spiritmaster") key = "elementalist";
+    // The class emblems from our Discord (same art as the roster).
+    if (EMBLEMS.has(key)) {
+      const span = el("span", "cb em");
+      span.dataset.class = key;
+      const img = document.createElement("img");
+      img.src = `/emblems/${key}.png`;
+      img.alt = className;
+      img.loading = "lazy";
+      span.append(img);
+      return span;
+    }
     const glyph = CLASS_GLYPHS[key] || CLASS_GLYPHS.unknown;
     const span = el("span", "cb");
     span.dataset.class = CLASS_GLYPHS[key] ? key : "unknown";
@@ -683,10 +695,10 @@
 
   async function loadDps() {
     try {
-      const res = await fetch("/api/dps-today", { cache: "no-store" });
+      const res = await fetch("/api/dps-month", { cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const b = await res.json();
-      dps.since.textContent = `since ${timeFmt.format(new Date(b.startsAt))} reset`;
+      dps.since.textContent = `since ${new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long" }).format(new Date(b.startsAt))}`;
       dps.count.textContent = b.fights === 1 ? "1 fight" : `${b.fights} fights`;
 
       // Few players so far: show how to join underneath, so the card stays full.

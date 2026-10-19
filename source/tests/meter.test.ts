@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createLink, fightsBetween, getLink, removeLink, userForToken, useMeterDatabase } from "../src/persistence/meter.js";
 import { buildBoard } from "../src/services/meter-board.js";
+import { monthStart } from "../src/services/meter-month.js";
 import { ingestUpload } from "../src/services/meter-ingest.js";
 import { isBossOrElite, ranksFromDevalue } from "../src/services/npc-ranks.js";
 
@@ -161,5 +162,16 @@ describe("npc ranks", () => {
     expect(isBossOrElite("Elite")).toBe(true);
     expect(isBossOrElite("Common")).toBe(false);
     expect(isBossOrElite(null)).toBe(false);
+  });
+});
+
+describe("monthly board window", () => {
+  it("starts at the daily reset on the 1st (Malaysia time)", () => {
+    const todayReset = Date.UTC(2026, 9, 19, 7, 0, 0); // 19 Oct, 3 PM Malaysia
+    const m = monthStart(todayReset, "Asia/Kuala_Lumpur");
+    expect(m.start).toBe(Date.UTC(2026, 9, 1, 7, 0, 0));
+    expect(m.label).toBe("2026-10");
+    // The reset on the 1st itself starts its own month.
+    expect(monthStart(Date.UTC(2026, 10, 1, 7, 0, 0), "Asia/Kuala_Lumpur").start).toBe(Date.UTC(2026, 10, 1, 7, 0, 0));
   });
 });
