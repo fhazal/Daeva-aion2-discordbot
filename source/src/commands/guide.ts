@@ -9,6 +9,8 @@ import {
 import type { ChatInputCommandInteraction } from "discord.js";
 import type { Command } from "./types.js";
 import { daevaFooter } from "../version.js";
+import { scheduleMessageCleanup } from "../services/next-cleanup.js";
+import { logger } from "../lib/logger.js";
 
 const HUB_URL = "https://daevaos.com/guides/class-guide-hub";
 
@@ -69,17 +71,15 @@ const CLASS_GUIDES: Record<
 
 const GUIDE_AUTO_DELETE_MS = 24 * 60 * 60 * 1000;
 
+/** Guides delete themselves after 24 h; saved, so a restart doesn't cancel it. */
 async function scheduleGuideDeletion(
   interaction: ChatInputCommandInteraction,
 ): Promise<void> {
   try {
     const reply = await interaction.fetchReply();
-    const timer = setTimeout(() => {
-      void reply.delete().catch(() => undefined);
-    }, GUIDE_AUTO_DELETE_MS);
-    timer.unref();
+    await scheduleMessageCleanup(reply.channelId, reply.id, new Date(Date.now() + GUIDE_AUTO_DELETE_MS));
   } catch (error) {
-    console.error("Could not schedule guide message cleanup:", error);
+    logger.warn({ err: error }, "Could not schedule guide message cleanup");
   }
 }
 

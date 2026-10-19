@@ -3,7 +3,11 @@ import path from "node:path";
 import type { Client } from "discord.js";
 import { logger } from "../lib/logger.js";
 
-/** /next replies waiting to be deleted (event end + 30 min). Survives restarts. */
+/**
+ * Bot replies waiting to be deleted: /next (event end + 30 min) and /guide
+ * (24 h). Kept in a file so a restart doesn't forget them; anything that
+ * fell due while the bot was down is deleted at start-up.
+ */
 type Pending = { channelId: string; messageId: string; deleteAt: string; tries?: number };
 
 const STATE_DIR = process.env.STATE_DIR ?? "/state";
@@ -30,15 +34,17 @@ async function save(): Promise<void> {
     await fs.writeFile(FILE + ".tmp", JSON.stringify(pending));
     await fs.rename(FILE + ".tmp", FILE);
   } catch (err) {
-    logger.warn({ err }, "Could not save /next cleanup list");
+    logger.warn({ err }, "Could not save the message cleanup list");
   }
 }
 
-export async function scheduleNextCleanup(channelId: string, messageId: string, deleteAt: Date): Promise<void> {
+export async function scheduleMessageCleanup(channelId: string, messageId: string, deleteAt: Date): Promise<void> {
   await load();
   pending.push({ channelId, messageId, deleteAt: deleteAt.toISOString() });
   await save();
 }
+
+export const scheduleNextCleanup = scheduleMessageCleanup;
 
 export function startNextCleanup(client: Client): () => void {
   let running = false;
@@ -68,10 +74,10 @@ export function startNextCleanup(client: Client): () => void {
           } else {
             p.tries = (p.tries ?? 0) + 1;
             if (p.tries >= 20) {
-              logger.error({ err: error, pending: p }, "Giving up deleting /next reply after 20 attempts");
+              logger.error({ err: error, pending: p }, "Giving up deleting a bot reply after 20 attempts");
               done = true;
             } else {
-              logger.warn({ err: error, pending: p }, "Could not delete /next reply, will retry");
+              logger.warn({ err: error, pending: p }, "Could not delete a bot reply, will retry");
             }
           }
         }

@@ -4,6 +4,10 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.3.1 · 20 October 2026
+
+- **/guide replies delete themselves again after 24 hours:** the countdown only lived in memory, so every restart (each deploy) cancelled it and guides stayed for good. It's now saved like /next's, survives restarts, and anything that fell due while the bot was down goes at start-up. Guides posted before 1.3.1 need deleting by hand once.
+
 ## 1.3.0 · 20 October 2026
 
 - **/help:** every command with a one-line explanation, grouped by purpose, with clickable commands. Only the person who runs it sees the list; the admin section only shows for members with Manage Server.
