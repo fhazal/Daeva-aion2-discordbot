@@ -12,7 +12,9 @@ export const MIN_DURATION_S = 20;
 export const MAX_DURATION_S = 30 * 60;
 const MAX_ROWS = 24;
 const MAX_DPS = 3_000_000;
-const HP_SLACK = 1.25;
+// Boss damage can exceed the listed HP when the boss heals or refills
+// (Vakron took 173%), so only absurd totals are refused.
+const HP_SLACK = 2;
 /** Verified ✓: the meter saw at least this share of the boss's HP. */
 export const VERIFIED_MIN = 0.97;
 const NAME = /^[\p{L}\p{N}]{2,24}$/u;

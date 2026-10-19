@@ -83,7 +83,7 @@ describe("ingestUpload", () => {
     expect(f).toHaveLength(2);
     expect(f.every((x) => !x.verified)).toBe(true);
     // Impossible damage on the boss is refused.
-    expect((await ingestUpload("u1", boss({ clock_counted: 1.6, started_unix: (NOW - 60_000) / 1000 }), rankOf, NOW)).status).toBe(422);
+    expect((await ingestUpload("u1", boss({ clock_counted: 2.4, started_unix: (NOW - 60_000) / 1000 }), rankOf, NOW)).status).toBe(422);
     // Older meters (no clock) still count, unverified.
     useMeterDatabase(new Database(":memory:"));
     createLink("u1", NOW);
