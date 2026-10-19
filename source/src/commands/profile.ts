@@ -30,7 +30,7 @@ import {
   SEARCH_REGIONS,
   type CharacterMatch,
 } from "../services/character-search.js";
-import { displayLegion, isLegionMember, legionLine, memberLegion, syncRoles } from "../services/legion.js";
+import { displayLegion, isLegionMember, memberLegion, roleNote, syncRoles } from "../services/legion.js";
 import { classColor, classEmoji, factionEmoji, factionName } from "../discord/class-style.js";
 import type { Command } from "./types.js";
 
@@ -245,7 +245,7 @@ export const profileCommand: Command = {
       });
       const roles = (await resync()) ?? ({ legion: "not-configured", player: "not-configured" } as const);
       const note = info
-        ? legionLine(entry.legion, roles)
+        ? roleNote(roles)
         : "Couldn't read your official details just now; they'll fill in during the daily refresh.";
       const total = listMemberCharacters(guildId, userId).length;
       return {

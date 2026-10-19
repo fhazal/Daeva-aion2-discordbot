@@ -88,6 +88,22 @@ export async function syncRoles(guild: Guild, userId: string, legion: string | n
   };
 }
 
+/**
+ * A note for /profile set cards, only when a role changed (the card's Legion
+ * field already shows the legion, so nothing is repeated otherwise).
+ */
+export function roleNote(roles: RoleChanges): string {
+  const name = displayLegion(LEGION_NAME);
+  const parts: string[] = [];
+  if (roles.legion === "added") parts.push(`Verified: you're in the ${name} legion.`);
+  if (roles.legion === "removed") parts.push(`No longer in the ${name} legion, so the ${name} role was removed.`);
+  if (roles.player === "added" && roles.legion !== "added") parts.push(`Not in the ${name} legion yet; you have the ${PLAYER_ROLE_NAME} role.`);
+  if (roles.legion === "failed" || roles.player === "failed") {
+    parts.push("I couldn't update your roles; an officer will need to check my permissions.");
+  }
+  return parts.join(" ");
+}
+
 /** A sentence for /profile replies describing the legion check and role changes. */
 export function legionLine(legion: string | null, roles: RoleChanges): string {
   const name = displayLegion(LEGION_NAME);
