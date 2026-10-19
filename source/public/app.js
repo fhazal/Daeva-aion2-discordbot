@@ -587,6 +587,36 @@
     return a;
   }
 
+  // Portrait with the class emblem in its corner, or the emblem alone until a portrait is known.
+  const EMBLEMS = new Set(["gladiator", "templar", "assassin", "ranger", "sorcerer", "elementalist", "cleric", "chanter"]);
+  function portrait(m) {
+    let key = String(m.className || "").toLowerCase().replace(/[^a-z]/g, "");
+    if (key === "spiritmaster") key = "elementalist";
+    const box = el("div", m.portrait ? "pt" : "pt none");
+    box.dataset.class = CLASS_GLYPHS[key] ? key : "unknown";
+    const em = el("span", "emb");
+    if (EMBLEMS.has(key)) {
+      const ei = document.createElement("img");
+      ei.src = `/emblems/${key}.png`;
+      ei.alt = m.className;
+      em.append(ei);
+    } else {
+      return classBadge(m.className);
+    }
+    if (m.portrait) {
+      const pi = document.createElement("img");
+      pi.className = "por";
+      pi.src = m.portrait;
+      pi.alt = "";
+      pi.loading = "lazy";
+      // If the portrait can't be loaded, fall back to the large emblem.
+      pi.addEventListener("error", () => { pi.remove(); box.className = "pt none"; });
+      box.append(pi);
+    }
+    box.append(em);
+    return box;
+  }
+
   async function loadRoster() {
     try {
       const res = await fetch("/api/roster", { cache: "no-store" });
@@ -603,8 +633,12 @@
         const info = el("div", "rn");
         const name = el("b", null, m.characterName);
         if (m.faction === "Elyos" || m.faction === "Asmodian") {
-          const f = el("span", "faction", m.faction);
+          const f = el("span", "faction");
           f.dataset.f = m.faction;
+          const fi = document.createElement("img");
+          fi.src = `/emblems/${m.faction.toLowerCase()}.png`;
+          fi.alt = "";
+          f.append(fi, m.faction);
           name.append(f);
         }
         const bits = [m.className || "Unknown class"];
@@ -617,7 +651,7 @@
         info.append(name, el("span", null, bits.join(" · ")), links);
         const cp = el("div", "cp");
         cp.append(el("b", null, m.combatPower != null ? m.combatPower.toLocaleString() : "–"), el("span", null, m.itemLevel != null ? `CP · iLv ${m.itemLevel}` : "CP"));
-        card.append(classBadge(m.className), info, cp);
+        card.append(portrait(m), info, cp);
         return card;
       }));
     } catch {

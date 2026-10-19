@@ -1,4 +1,5 @@
 import Database from "better-sqlite3";
+import { portraitId } from "../services/portraits.js";
 
 /**
  * Opt-in legion roster. Members add their characters (up to five each, alts
@@ -44,6 +45,8 @@ export type PublicRosterEntry = {
   itemLevel: number | null;
   legion: string | null;
   faction: string | null;
+  /** Our own URL for the cached portrait, when the character has one. */
+  portrait: string | null;
   server: string;
   profileUrl: string;
   armoryUrl: string | null;
@@ -255,6 +258,15 @@ export function listRosterEntries(): RosterEntry[] {
   return open().prepare(SELECT_ENTRY).all() as RosterEntry[];
 }
 
+/** The official portrait URL behind one of our portrait ids, if any. */
+export function portraitSource(id: string): string | null {
+  const rows = open().prepare("SELECT profile_url, image_url FROM legion_roster WHERE image_url IS NOT NULL").all() as Array<{
+    profile_url: string;
+    image_url: string;
+  }>;
+  return rows.find((r) => portraitId(characterKey(r.profile_url)) === id)?.image_url ?? null;
+}
+
 /** Removes one of a member's characters by name. */
 export function removeRosterCharacter(guildId: string, userId: string, name: string): boolean {
   return (
@@ -283,6 +295,7 @@ export function listPublicRoster(): PublicRosterEntry[] {
     itemLevel: r.itemLevel,
     legion: r.legion,
     faction: r.faction ?? null,
+    portrait: r.imageUrl ? `/api/portrait/${portraitId(characterKey(r.profileUrl))}` : null,
     server: serverName(r.serverId),
     profileUrl: r.profileUrl,
     armoryUrl: armoryUrl(r.profileUrl),

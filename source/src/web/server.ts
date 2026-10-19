@@ -5,7 +5,8 @@ import { fileURLToPath } from "node:url";
 import { getUpcoming } from "../core/schedule-engine.js";
 import { listEventMeta, listRegions } from "../data/load.js";
 import { logger } from "../lib/logger.js";
-import { listPublicRoster } from "../persistence/roster.js";
+import { listPublicRoster, portraitSource } from "../persistence/roster.js";
+import { getPortrait, isPortraitId } from "../services/portraits.js";
 import { getGartuaStore } from "../persistence/store.js";
 import { getCachedLiveGartuaEstimate } from "../services/live-gartua.js";
 import { readMirrored, readMirroredImage } from "../services/gaming-tools-mirror.js";
@@ -413,6 +414,18 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
 
   if (url.pathname === "/api/dps-today") {
     sendJson(res, 200, dpsTodayJson(), head);
+    return;
+  }
+
+  if (url.pathname.startsWith("/api/portrait/")) {
+    // Roster portraits, cached from the official image host (see services/portraits.ts).
+    const id = url.pathname.slice("/api/portrait/".length);
+    const img = isPortraitId(id) ? await getPortrait(id, portraitSource(id)) : null;
+    if (!img) {
+      send(res, 404, "text/plain; charset=utf-8", "Not found", head, "no-store");
+      return;
+    }
+    send(res, 200, img.type, img.body, head, "public, max-age=86400");
     return;
   }
 
