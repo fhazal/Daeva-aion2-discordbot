@@ -4,6 +4,10 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.4.1 · 20 October 2026
+
+- **Website text a size smaller:** Rajdhani text about 9% smaller, block titles 17px, headline 40px.
+
 ## 1.4.0 · 20 October 2026
 
 - **Website refresh:** block titles in Orbitron and text in Rajdhani, both served from our own server (no more Google Fonts). Each event has its own colour across the cards and the full schedule, with a coloured countdown, icon tile and a line along the bottom of each card.

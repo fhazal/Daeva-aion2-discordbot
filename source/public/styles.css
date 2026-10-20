@@ -1,10 +1,10 @@
 /* Daeva Timers: navy, gold and Daeva blue, shared with Daeva Meter. */
 /* Fonts (SIL Open Font Licence, files in /fonts). Rajdhani runs small, so
    size-adjust brings it up to the size the layout was designed for. */
-@font-face { font-family: "Rajdhani"; font-weight: 400; font-display: swap; size-adjust: 114%; src: url("/fonts/rajdhani-regular.woff") format("woff"); }
-@font-face { font-family: "Rajdhani"; font-weight: 500; font-display: swap; size-adjust: 114%; src: url("/fonts/rajdhani-medium.woff") format("woff"); }
-@font-face { font-family: "Rajdhani"; font-weight: 600; font-display: swap; size-adjust: 114%; src: url("/fonts/rajdhani-semibold.woff") format("woff"); }
-@font-face { font-family: "Rajdhani"; font-weight: 700 900; font-display: swap; size-adjust: 114%; src: url("/fonts/rajdhani-bold.woff") format("woff"); }
+@font-face { font-family: "Rajdhani"; font-weight: 400; font-display: swap; size-adjust: 104%; src: url("/fonts/rajdhani-regular.woff") format("woff"); }
+@font-face { font-family: "Rajdhani"; font-weight: 500; font-display: swap; size-adjust: 104%; src: url("/fonts/rajdhani-medium.woff") format("woff"); }
+@font-face { font-family: "Rajdhani"; font-weight: 600; font-display: swap; size-adjust: 104%; src: url("/fonts/rajdhani-semibold.woff") format("woff"); }
+@font-face { font-family: "Rajdhani"; font-weight: 700 900; font-display: swap; size-adjust: 104%; src: url("/fonts/rajdhani-bold.woff") format("woff"); }
 @font-face { font-family: "Orbitron"; font-weight: 400 900; font-display: swap; src: url("/fonts/orbitron.woff") format("woff"); }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -40,7 +40,7 @@ a { color: inherit; text-decoration: none; }
 code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .92em; color: var(--gold2); background: rgba(232, 176, 75, .09); padding: 1px 6px; border-radius: 5px; }
 h1, h2, h3 { letter-spacing: -.015em; line-height: 1.2; }
 /* Block titles: Orbitron capitals, one size everywhere. */
-h2, .timeline h2, .list-head h2, .box-head h2, .board .box-head h2, .app h2 { font-family: var(--title); font-size: 19px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+h2, .timeline h2, .list-head h2, .box-head h2, .board .box-head h2, .app h2 { font-family: var(--title); font-size: 17px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
 .sub { color: var(--muted); font-size: 14px; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .wrap { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
@@ -92,7 +92,7 @@ svg.lu { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: roun
 .hero-grid { position: relative; display: grid; grid-template-columns: 1.15fr 1fr; gap: 48px; padding-top: 64px; padding-bottom: 56px; align-items: center; }
 .eyebrow { display: inline-flex; gap: 8px; align-items: center; color: var(--gold2); font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
 .eyebrow .ic { width: 15px; height: 15px; }
-.hero h1 { font-family: var(--title); font-size: 44px; line-height: 1.1; font-weight: 800; letter-spacing: .01em; margin: 14px 0 16px; }
+.hero h1 { font-family: var(--title); font-size: 40px; line-height: 1.1; font-weight: 800; letter-spacing: .01em; margin: 14px 0 16px; }
 .hero h1 em { font-style: normal; background: linear-gradient(90deg, #ffe7a8, #e8b04b); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .lede { color: var(--muted); font-size: 17px; max-width: 520px; }
 .cta { display: flex; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
