@@ -23,6 +23,8 @@ const BOARD_CACHE_MS = 60_000;
 const TICK_MS = 60_000;
 const PRUNE_EVERY_MS = 60 * 60 * 1000;
 const SITE = "https://aion2.bajubesi.org/#board";
+/** The same AION 2 logo as the event panel header. */
+const AION2_ICON = "https://bajubesi.org/aion2-icon.webp";
 
 export type DayWindow = { start: number; end: number; day: string };
 
@@ -72,6 +74,11 @@ export function dpsMonthJson(now = Date.now()): string {
   return body;
 }
 
+/** "Top 10", "Top 4", or "Top player" when only one is listed. */
+export function topHeading(count: number): string {
+  return count === 1 ? "Top player" : `Top ${count}`;
+}
+
 /** The recap embed, or null when nobody shared a fight today. */
 export function recapEmbed(board: DpsBoard): EmbedBuilder | null {
   if (board.fights === 0 || board.top.length === 0) return null;
@@ -87,9 +94,8 @@ export function recapEmbed(board: DpsBoard): EmbedBuilder | null {
   const strongest = board.classes[0];
   const embed = new EmbedBuilder()
     .setColor(strongest ? classColor(strongest.className, 0xe8b04b) : 0xe8b04b)
-    .setTitle("Daily DPS recap")
-    .setURL(SITE)
-    .setDescription([`🗓️ ${day} · since ${reset} reset`, ...lines].join("\n"))
+    .setAuthor({ name: "Aion 2 · Daily DPS recap", iconURL: AION2_ICON, url: SITE })
+    .setDescription([`-# 🗓️ ${day} · since ${reset} reset`, "", `**🏆 ${topHeading(lines.length)}**`, ...lines].join("\n"))
     .setFooter(
       daevaFooter(`${board.top.some((p) => p.verified) ? "✅ every hit counted · " : ""}⚔️ ${board.fights} boss and elite fights · 👥 ${board.players} players · Link your meter with /meter link`),
     )

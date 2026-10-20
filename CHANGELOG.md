@@ -4,6 +4,10 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.4.3 · 20 October 2026
+
+- **Daily DPS recap:** AION 2 logo header like the event panel, the date as small text with room below it, and a *Top N* heading that follows how many players are listed (up to Top 10).
+
 ## 1.4.2 · 20 October 2026
 
 - **Website footer:** gold Orbitron column headings and a Lucide icon beside every link; *DPS today* renamed *DPS this month* to match the boards.
