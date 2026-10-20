@@ -58,6 +58,8 @@ export function buildTimerEmbed(params: {
   gartuaTimer?: GartuaTimer | null;
   liveGartua?: { spawnAt: string; updatedAt: number } | null;
   asiaStatus?: AsiaStatusSnapshot | null;
+  /** The server the card goes to (adds the credit outside the home server). */
+  guildId?: string | null;
 }): EmbedBuilder {
   const { region, occurrences, sourceLabel, eventFilterLabel, gartuaTimer, liveGartua, asiaStatus } = params;
   const disclaimer = getScheduleDisclaimer(region.id);
@@ -207,6 +209,6 @@ export function buildTimerEmbed(params: {
       },
     )
     
-    .setFooter(daevaFooter("Daeva • Bajubesi Network • AION 2 Discord Assistant"))
+    .setFooter(daevaFooter("Daeva • Bajubesi Network • AION 2 Discord Assistant", undefined, params.guildId))
     .setTimestamp(new Date());
 }

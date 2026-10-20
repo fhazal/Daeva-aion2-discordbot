@@ -8,8 +8,8 @@ import {
   SlashCommandBuilder,
   type ChatInputCommandInteraction,
 } from "discord.js";
-import { helpSections } from "../help.js";
-import { daevaFooter } from "../version.js";
+import { aboutField, helpSections } from "../help.js";
+import { daevaFooter, isHomeGuild } from "../version.js";
 import type { Command } from "./types.js";
 
 const SITE = "https://aion2.bajubesi.org";
@@ -45,7 +45,8 @@ const helpCommand: Command = {
       .setTitle("📖 Daeva commands")
       .setDescription("Click a command to start typing it. Only you can see this list.")
       .addFields(helpSections(isAdmin, ids))
-      .setFooter(daevaFooter(undefined, "aion2.bajubesi.org"));
+      .setFooter(daevaFooter(undefined, "aion2.bajubesi.org", interaction.guildId));
+    if (!isHomeGuild(interaction.guildId)) embed.addFields(aboutField());
     const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel("Website").setEmoji("🌐").setURL(SITE),
       new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel("DPS boards").setEmoji("📊").setURL(`${SITE}/#board`),

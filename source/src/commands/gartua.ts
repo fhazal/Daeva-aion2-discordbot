@@ -104,7 +104,7 @@ export const gartuaCommand: Command = {
           "Your saved Gartua countdown has not been changed.\n" +
           "This is not a spawn confirmation.",
         )
-        .setFooter(daevaFooter())
+        .setFooter(daevaFooter(undefined, undefined, interaction.guildId))
         .setTimestamp(new Date());
 
       await channel.send({ embeds: [embed] });

@@ -80,7 +80,7 @@ export function topHeading(count: number): string {
 }
 
 /** The recap embed, or null when nobody shared a fight today. */
-export function recapEmbed(board: DpsBoard): EmbedBuilder | null {
+export function recapEmbed(board: DpsBoard, guildId?: string | null): EmbedBuilder | null {
   if (board.fights === 0 || board.top.length === 0) return null;
   const medal = ["🥇", "🥈", "🥉"];
   const lines = board.top.map((p, i) => {
@@ -97,7 +97,7 @@ export function recapEmbed(board: DpsBoard): EmbedBuilder | null {
     .setAuthor({ name: "Aion 2 · Daily DPS recap", iconURL: AION2_ICON, url: SITE })
     .setDescription([`-# 🗓️ ${day} · since ${reset} reset`, "", `**🏆 ${topHeading(lines.length)}**`, ...lines].join("\n"))
     .setFooter(
-      daevaFooter(`${board.top.some((p) => p.verified) ? "✅ every hit counted · " : ""}⚔️ ${board.fights} boss and elite fights · 👥 ${board.players} players · Link your meter with /meter link`),
+      daevaFooter(`${board.top.some((p) => p.verified) ? "✅ every hit counted · " : ""}⚔️ ${board.fights} boss and elite fights · 👥 ${board.players} players · Link your meter with /meter link`, undefined, guildId),
     )
     .setTimestamp(new Date(board.endsAt));
   if (strongest) {
@@ -110,8 +110,8 @@ export function recapEmbed(board: DpsBoard): EmbedBuilder | null {
 }
 
 async function postRecaps(client: Client, board: DpsBoard): Promise<void> {
-  const embed = recapEmbed(board);
   for (const t of recapTargets()) {
+    const embed = recapEmbed(board, t.guildId);
     if (t.lastPostedDay === board.day) continue;
     markRecapPosted(t.guildId, board.day);
     if (!embed) continue;

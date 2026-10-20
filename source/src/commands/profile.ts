@@ -53,7 +53,7 @@ function describe(m: CharacterMatch): string {
 const formatNum = (n: number | null) => (n != null ? n.toLocaleString("en-US") : "–");
 
 /** A profile card: portrait, details as fields with icons, class colour, and its own link buttons. */
-function profileCard(e: RosterEntry, note?: string) {
+function profileCard(e: RosterEntry, note?: string, guildId?: string | null) {
   const ours = isLegionMember(e.legion);
   const embed = new EmbedBuilder()
     .setColor(classColor(e.className, ours ? 0x5fd3c4 : 0x8b939e))
@@ -67,7 +67,7 @@ function profileCard(e: RosterEntry, note?: string) {
       { name: "🛡️ Item level", value: formatNum(e.itemLevel), inline: true },
       { name: "🏰 Legion", value: e.legion ? `${displayLegion(e.legion)}${ours ? " ✓" : ""}` : "–", inline: true },
     )
-    .setFooter(daevaFooter("Bajubesi Network legion roster", "last updated"))
+    .setFooter(daevaFooter("Bajubesi Network legion roster", "last updated", guildId))
     .setTimestamp(new Date(e.updatedAt));
   // Faction under the name (custom emojis show in the description, not the author line).
   const lines = [e.faction ? `${factionEmoji(e.faction)} **${e.faction}**` : "", note ?? ""].filter(Boolean);
@@ -160,10 +160,10 @@ export const profileCommand: Command = {
       const [first, ...rest] = chars.slice(0, MAX_CHARACTERS);
       await interaction.reply({
         content: `Your characters on the roster (${chars.length} of ${MAX_CHARACTERS}):`,
-        ...profileCard(first!),
+        ...profileCard(first!, undefined, interaction.guildId),
         flags: MessageFlags.Ephemeral,
       });
-      for (const e of rest) await interaction.followUp({ ...profileCard(e), flags: MessageFlags.Ephemeral });
+      for (const e of rest) await interaction.followUp({ ...profileCard(e, undefined, interaction.guildId), flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -254,7 +254,7 @@ export const profileCommand: Command = {
         content: existing
           ? `✅ **${entry.characterName}** is up to date.`
           : `✅ **${entry.characterName}** is on the roster (${total} of ${MAX_CHARACTERS} characters).`,
-        ...profileCard(entry, note),
+        ...profileCard(entry, note, interaction.guildId),
       };
     };
 

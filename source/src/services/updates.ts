@@ -54,7 +54,7 @@ export async function highlightsFor(tag: string): Promise<Highlights> {
 
 const clip = (s: string, max = 1024) => (s.length <= max ? s : s.slice(0, max - 1).replace(/\n[^\n]*$/, "") + "\n…");
 
-export function releaseMessage(rel: Release, h: Highlights, roleId: string | null): MessageCreateOptions {
+export function releaseMessage(rel: Release, h: Highlights, roleId: string | null, guildId?: string | null): MessageCreateOptions {
   const version = rel.tag.replace(/^v/, "");
   const embed = new EmbedBuilder()
     .setColor(0xe8b04b)
@@ -63,7 +63,7 @@ export function releaseMessage(rel: Release, h: Highlights, roleId: string | nul
     .setURL(rel.url)
     .setThumbnail(METER_ICON)
     .setImage(`${METER_SHOT}?v=${version}`) // fresh copy per release; Discord caches by URL
-    .setFooter(daevaFooter("Already installed? The meter offers the update · run the new installer over the old one"))
+    .setFooter(daevaFooter("Already installed? The meter offers the update · run the new installer over the old one", undefined, guildId))
     .setTimestamp(new Date(rel.publishedAt));
   if (h.tagline) embed.setDescription(h.tagline);
   if (h.added.length) embed.addFields({ name: "🆕 What's new", value: clip(h.added.join("\n")) });
@@ -86,7 +86,7 @@ export function releaseMessage(rel: Release, h: Highlights, roleId: string | nul
   };
 }
 
-export function newsMessage(n: NewsEntry, botIcon: string | undefined): MessageCreateOptions {
+export function newsMessage(n: NewsEntry, botIcon: string | undefined, guildId?: string | null): MessageCreateOptions {
   const embed = new EmbedBuilder()
     .setColor(0x8b5cf6)
     .setAuthor({ name: "Daeva · what's new", ...(botIcon ? { iconURL: botIcon } : {}) })
@@ -94,7 +94,7 @@ export function newsMessage(n: NewsEntry, botIcon: string | undefined): MessageC
     .setURL(SITE)
     .setDescription(n.intro)
     .addFields(n.items.slice(0, 20).map((i) => ({ name: `${i.emoji} ${i.title}`, value: clip(i.text) })))
-    .setFooter(daevaFooter("Daeva · aion2.bajubesi.org"));
+    .setFooter(daevaFooter("Daeva · aion2.bajubesi.org", undefined, guildId));
   if (botIcon) embed.setThumbnail(botIcon);
   const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel("Open aion2.bajubesi.org").setEmoji("🌐").setURL(SITE),
@@ -116,7 +116,7 @@ export async function announceTo(client: Client, t: UpdatesTarget, rel: Release 
   const send = (o: MessageCreateOptions) => (channel as TextChannel).send(o);
   if (rel && !wasSent(t.guildId, `meter:${rel.tag}`)) {
     if (!cache || cache.tag !== rel.tag) cache = { tag: rel.tag, h: await highlightsFor(rel.tag) };
-    await send(releaseMessage(rel, cache.h, t.roleId));
+    await send(releaseMessage(rel, cache.h, t.roleId, t.guildId));
     markSent(t.guildId, `meter:${rel.tag}`);
     posted++;
     logger.info({ guildId: t.guildId, tag: rel.tag }, "Announced Daeva Meter release");
@@ -124,7 +124,7 @@ export async function announceTo(client: Client, t: UpdatesTarget, rel: Release 
   const icon = client.user?.displayAvatarURL({ size: 256 });
   for (const n of [...NEWS].reverse()) {
     if (wasSent(t.guildId, `news:${n.id}`)) continue;
-    await send(newsMessage(n, icon));
+    await send(newsMessage(n, icon, t.guildId));
     markSent(t.guildId, `news:${n.id}`);
     posted++;
     logger.info({ guildId: t.guildId, id: n.id }, "Announced Daeva news");

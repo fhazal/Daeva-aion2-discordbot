@@ -136,6 +136,7 @@ async function handleRegionSelect(interaction: StringSelectMenuInteraction): Pro
       occurrences,
       sourceLabel: "manual selection",
       eventFilterLabel: eventId ? (getEventMeta(eventId)?.name ?? eventId) : null,
+      guildId: interaction.guildId,
     });
     await interaction.editReply({ content: null, embeds: [embed], components: [] });
     return;
@@ -198,6 +199,7 @@ async function handleRegionSelect(interaction: StringSelectMenuInteraction): Pro
       region,
       occurrences,
       sourceLabel: "manual selection · live panel",
+      guildId: interaction.guildId,
     });
     await interaction.editReply({
       content: `Live panel for **${region.label}** — updates about every minute.`,

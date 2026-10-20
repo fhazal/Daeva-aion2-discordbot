@@ -194,6 +194,6 @@ Daeva reads public data from other services. If you run your own copy, please ke
 
 <div align="center">
 
-<sub>Made with ☕ by the <b>Bajubesi Network</b> community · AION 2 is a trademark of NCSOFT Corporation.</sub>
+<sub>Made with ☕ by <b>BajuBesi Labs</b> · AION 2 is a trademark of NCSOFT Corporation.</sub>
 
 </div>

@@ -127,7 +127,7 @@ const guideCommand: Command = {
           "Find class guides, quick references, builds and community resources.\n\n" +
             "Use `/guide class` to open the quick guide for a specific class.",
         )
-        .setFooter(daevaFooter("Daeva • AION 2 Community Guides"));
+        .setFooter(daevaFooter("Daeva • AION 2 Community Guides", undefined, interaction.guildId));
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
@@ -165,7 +165,7 @@ const guideCommand: Command = {
           `${guide.note}.\n\n` +
             "Open the linked page for the class reference. Check the page for updates before using a build.",
         )
-        .setFooter(daevaFooter("Daeva • AION 2 Quick Guides"));
+        .setFooter(daevaFooter("Daeva • AION 2 Quick Guides", undefined, interaction.guildId));
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()

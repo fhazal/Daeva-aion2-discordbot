@@ -827,6 +827,8 @@
     if (document.visibilityState === "visible") load();
   });
 
+  // The maker's mark shows on copies of this site hosted anywhere else.
+  if (location.hostname !== "aion2.bajubesi.org") $("made").hidden = false;
   setInterval(tick, 1_000);
   load();
   loadRoster();

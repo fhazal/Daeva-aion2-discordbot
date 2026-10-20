@@ -69,3 +69,13 @@ export function helpSections(isAdmin: boolean, ids: ReadonlyMap<string, string>)
     value: s.items.map((i) => `${helpMention(i, ids)} ${i.text}`).join("\n"),
   }));
 }
+
+/** The closing "About Daeva" section, shown in servers other than the home one. */
+export function aboutField(): { name: string; value: string } {
+  return {
+    name: "✨ About Daeva",
+    value:
+      "Made with ☕ by **BajuBesi Labs**\n" +
+      "[🌐 Website](https://aion2.bajubesi.org) · [💬 Discord](https://discord.gg/TCmm8cH3GE) · [☕ Support on Ko-fi](https://ko-fi.com/bajubesi)",
+  };
+}

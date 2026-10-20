@@ -97,6 +97,7 @@ export const panelCommand: Command = {
       sourceLabel: sourceLabel(resolved.source) + " · live panel",
       gartuaTimer: resolved.region.id === "asia" ? getGartuaStore().get() : null,
       liveGartua: resolved.region.id === "asia" ? getCachedLiveGartuaEstimate() : null,
+      guildId: interaction.guildId,
     });
 
     await interaction.reply({

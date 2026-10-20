@@ -513,6 +513,7 @@ function activeNotices(snapshot: AsiaStatusSnapshot): AsiaNotice[] {
 
 export function buildAsiaStatusEmbed(
   snapshot: AsiaStatusSnapshot,
+  guildId?: string | null,
 ): EmbedBuilder {
   const rosterReady = snapshot.rosterState === "ready";
   const noticesReady = snapshot.noticesState === "ready";
@@ -551,7 +552,7 @@ export function buildAsiaStatusEmbed(
      (snapshot.liveSummary ? `Live status: ${snapshot.liveSummary}` : "") +
       creationLine,
     )
-    .setFooter(daevaFooter("Live server status: gaming.tools · Roster/maintenance: aion2.tools"))
+    .setFooter(daevaFooter("Live server status: gaming.tools · Roster/maintenance: aion2.tools", undefined, guildId))
     .setTimestamp(new Date(snapshot.observedAt));
 
   const noticeLines = active.map((notice) => {
@@ -695,8 +696,9 @@ export function startAsiaStatusMonitor(client: Client): () => void {
               const channel = await client.channels.fetch(channelId).catch(() => null);
               if (!channel || !channel.isTextBased() || channel.isDMBased()) continue;
 
+              const guildId = (channel as TextChannel).guildId;
               await (channel as TextChannel).send({
-                embeds: [embed],
+                embeds: [EmbedBuilder.from(embed.toJSON()).setFooter(daevaFooter(undefined, undefined, guildId))],
                 allowedMentions: { parse: [] },
               }).catch((error: unknown) => {
                 logger.warn({ err: error, channelId }, "Could not send Asia notice alert");

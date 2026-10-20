@@ -20,7 +20,7 @@ const serverCommand: Command = {
     try {
       const snapshot = await getAsiaStatus(true);
       const reply = await interaction.editReply({
-        embeds: [buildAsiaStatusEmbed(snapshot)],
+        embeds: [buildAsiaStatusEmbed(snapshot, interaction.guildId)],
         allowedMentions: { parse: [] },
       });
 

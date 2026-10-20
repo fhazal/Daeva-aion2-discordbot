@@ -40,6 +40,7 @@ export function startPanelUpdater(client: Client): () => void {
           gartuaTimer: region.id === "asia" ? getGartuaStore().get() : null,
           liveGartua: region.id === "asia" ? liveGartua : null,
           asiaStatus,
+          guildId: panel.guildId,
         });
 
         const textChannel = channel as TextChannel;

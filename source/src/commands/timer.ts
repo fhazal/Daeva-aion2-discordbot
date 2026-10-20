@@ -37,6 +37,7 @@ export async function replyWithTimers(
     occurrences,
     sourceLabel: sourceLabel(source),
     eventFilterLabel: eventId ? (getEventMeta(eventId)?.name ?? eventId) : null,
+    guildId: interaction.guildId,
   });
 
   const payload = { embeds: [embed], components: [] as never[] };

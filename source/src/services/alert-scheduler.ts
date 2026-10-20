@@ -41,8 +41,9 @@ export function buildAlertEmbed(params: {
   startsAt: Date;
   leadMinutes: number;
   showRegion: boolean;
+  guildId?: string | null;
 }): EmbedBuilder {
-  const { meta, region, startsAt, leadMinutes, showRegion } = params;
+  const { meta, region, startsAt, leadMinutes, showRegion, guildId } = params;
   const relative = time(startsAt, TimestampStyles.RelativeTime);
   const absolute = time(startsAt, TimestampStyles.ShortDateTime);
 
@@ -53,9 +54,9 @@ export function buildAlertEmbed(params: {
     .setTimestamp(startsAt);
 
   if (showRegion) {
-    embed.setFooter(daevaFooter(`${region.label} · T-${leadMinutes}m`));
+    embed.setFooter(daevaFooter(`${region.label} · T-${leadMinutes}m`, undefined, guildId));
   } else {
-    embed.setFooter(daevaFooter(`T-${leadMinutes}m`));
+    embed.setFooter(daevaFooter(`T-${leadMinutes}m`, undefined, guildId));
   }
 
   return embed;
@@ -179,6 +180,7 @@ async function fireDueAlerts(client: Client): Promise<void> {
         startsAt: next.startsAt,
         leadMinutes: alert.leadMinutes,
         showRegion,
+        guildId: alert.guildId,
       });
 
       const message = await (channel as TextChannel).send({
@@ -205,7 +207,7 @@ const GARTUA_LATE_MS = 30 * 60_000;
 const GARTUA_SAME_SPAWN_MS = 30 * 60_000;
 const gartuaDueShown = new Set<string>();
 
-function gartuaEmbed(spawnAt: string, source: "live" | "manual", due: boolean): EmbedBuilder {
+function gartuaEmbed(spawnAt: string, source: "live" | "manual", due: boolean, guildId?: string | null): EmbedBuilder {
   const ts = Math.floor(Date.parse(spawnAt) / 1000);
   const keepMin = Math.round(GARTUA_KEEP_MS / 60_000);
   return new EmbedBuilder()
@@ -219,7 +221,7 @@ function gartuaEmbed(spawnAt: string, source: "live" | "manual", due: boolean): 
         (source === "live" ? "Source: Aion2Timers kill reports." : "Source: manual estimate from a trusted member.") +
         "\n**Estimate only. Check the Field Boss list in-game.**",
     )
-    .setFooter(daevaFooter(`This alert removes itself ${keepMin} minutes after the spawn time.`))
+    .setFooter(daevaFooter(`This alert removes itself ${keepMin} minutes after the spawn time.`, undefined, guildId))
     .setTimestamp(new Date());
 }
 
@@ -294,7 +296,7 @@ async function fireGartuaAlert(client: Client): Promise<void> {
     const message = await fetchGartuaMessage(client, existing.channelId, existing.messageId);
     if (message) {
       try {
-        await message.edit({ content: null, embeds: [gartuaEmbed(spawnAt, source, due)] });
+        await message.edit({ content: null, embeds: [gartuaEmbed(spawnAt, source, due, message.guildId)] });
         gartuaDueShown.add(shownKey);
       } catch (error) {
         logger.warn({ err: error, existing }, "Could not update Gartua alert");
@@ -322,7 +324,7 @@ async function fireGartuaAlert(client: Client): Promise<void> {
   try {
     sent = await (channel as TextChannel).send({
       ...(timer.mentionRoleId ? { content: `<@&${timer.mentionRoleId}>` } : {}),
-      embeds: [gartuaEmbed(spawnAt, source, due)],
+      embeds: [gartuaEmbed(spawnAt, source, due, (channel as TextChannel).guildId)],
       allowedMentions: timer.mentionRoleId ? { roles: [timer.mentionRoleId] } : { parse: [] },
     });
   } catch (error) {

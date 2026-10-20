@@ -56,7 +56,7 @@ function firstImage(c: string): string | undefined {
 }
 
 /** The Discord card for one Steam post: logo header, tidy text, maintenance times as fields, and a link button. */
-export function newsMessage(i: NewsItem) {
+export function newsMessage(i: NewsItem, guildId?: string | null) {
   const kind = newsKind(i.title);
   const style = NEWS_STYLE[kind];
   let text = steamToDiscord(i.contents);
@@ -70,7 +70,7 @@ export function newsMessage(i: NewsItem) {
     .setURL(i.url)
     .setDescription(clip(text, 700) || "Read the full post on Steam.")
     .setTimestamp(new Date(i.date * 1000))
-    .setFooter(daevaFooter("Official announcement via Steam"));
+    .setFooter(daevaFooter("Official announcement via Steam", undefined, guildId));
   if (maint) {
     const s = Math.floor(maint.start / 1000);
     embed.addFields({ name: "🕒 Starts", value: `<t:${s}:f>\n<t:${s}:R>`, inline: true });
@@ -120,7 +120,7 @@ async function checkNews(client: Client): Promise<void> {
   for (const i of fresh) {
     await channel.send({
       ...(ROLE_ID ? { content: `<@&${ROLE_ID}>` } : {}),
-      ...newsMessage(i),
+      ...newsMessage(i, (channel as { guildId?: string }).guildId),
       allowedMentions: ROLE_ID ? { roles: [ROLE_ID] } : { parse: [] },
     });
     seen.add(String(i.gid));
