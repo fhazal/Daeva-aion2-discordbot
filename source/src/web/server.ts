@@ -41,6 +41,8 @@ const MIME: Record<string, string> = {
   ".ico": "image/x-icon",
   ".webmanifest": "application/manifest+json",
   ".txt": "text/plain; charset=utf-8",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
 };
 
 const SECURITY_HEADERS: Record<string, string> = {
@@ -49,8 +51,8 @@ const SECURITY_HEADERS: Record<string, string> = {
   "X-Frame-Options": "DENY",
   "Content-Security-Policy":
     "default-src 'self'; " +
-    "style-src 'self' https://fonts.googleapis.com; " +
-    "font-src https://fonts.gstatic.com; " +
+    "style-src 'self'; " +
+    "font-src 'self'; " +
     "img-src 'self' data:; " +
     "script-src 'self'; " +
     "connect-src 'self'; " +

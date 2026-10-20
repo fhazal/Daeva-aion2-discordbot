@@ -4,6 +4,11 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.4.0 · 20 October 2026
+
+- **Website refresh:** block titles in Orbitron and text in Rajdhani, both served from our own server (no more Google Fonts). Each event has its own colour across the cards and the full schedule, with a coloured countdown, icon tile and a line along the bottom of each card.
+- **Up Next banner:** the next event to start sits in a banner above the cards with its countdown; the cards below skip it so the grid stays full.
+
 ## 1.3.1 · 20 October 2026
 
 - **/guide replies delete themselves again after 24 hours:** the countdown only lived in memory, so every restart (each deploy) cancelled it and guides stayed for good. It's now saved like /next's, survives restarts, and anything that fell due while the bot was down goes at start-up. Guides posted before 1.3.1 need deleting by hand once.

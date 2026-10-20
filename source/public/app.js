@@ -55,7 +55,7 @@
   };
 
   const EVENT_ICON = {
-    spacetime_rift: "sparkles", shugo_festival: "gift", dimensional_invasion: "swords", watcher_kaira: "eye",
+    spacetime_rift: "sparkles", portal_open: "sparkles", shugo_festival: "gift", dimensional_invasion: "swords", watcher_kaira: "eye",
     artifact_siege: "castle", executor_bosses: "skull", guardian_nahma: "shield", arena_of_tactics: "trophy",
     daily_reset: "refresh-cw", weekly_reset: "calendar-clock",
   };
@@ -121,6 +121,7 @@
     stats: $("stats"),
     track: $("track"),
     hours: $("hours"),
+    upNext: $("up-next"),
     events: $("events"),
     nextList: $("next-list"),
     statusList: $("status-list"),
@@ -434,17 +435,40 @@
     return card;
   }
 
+  // The next event to start (not one that is live now) gets the Up Next
+  // banner; the grid below then skips it and fills up to six cards.
   function renderEvents(active, upcoming) {
+    const liveIds = new Set(active.map((a) => a.event.id));
+    const next = upcoming.find((u) => !liveIds.has(u.event.id));
+    renderUpNext(next);
     const cards = [];
     if (data.region.id === "asia") cards.push(gartuaCard());
     for (const a of active) cards.push(eventCard(a, true));
-    const liveIds = new Set(active.map((a) => a.event.id));
     for (const u of upcoming) {
       if (cards.length >= 6) break;
-      if (liveIds.has(u.event.id)) continue;
+      if (liveIds.has(u.event.id) || u === next) continue;
       cards.push(eventCard(u, false));
     }
     els.events.replaceChildren(...cards.slice(0, 6));
+  }
+
+  function renderUpNext(next) {
+    const box = els.upNext;
+    box.hidden = !next;
+    if (!next) return box.replaceChildren();
+    const { event, occ } = next;
+    box.dataset.ev = event.id;
+    const ring = el("span", "ring");
+    ring.append(icon(EVENT_ICON[event.id] || "activity", "si"));
+    const tx = el("div", "tx");
+    tx.append(el("div", "k", "Up next"), el("div", "n", event.name));
+    if (event.confidence === "low") tx.append(el("div", "s", "Time not yet confirmed"));
+    else if (event.description) tx.append(el("div", "s", event.description));
+    const right = el("div", "r");
+    const count = el("div", "big", "--");
+    count.dataset.to = occ.startsAt;
+    right.append(count, el("div", "s", `Starts ${when(new Date(occ.startsAt))} your time`));
+    box.replaceChildren(ring, tx, right);
   }
 
   function renderSchedule(upcoming) {
