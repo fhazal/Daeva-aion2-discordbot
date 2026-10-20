@@ -235,9 +235,9 @@ svg.lu { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: roun
 .ni.lock, .ni.mnt { color: #f0a94b; }
 .ni.new { color: #6ab8ff; filter: drop-shadow(0 0 4px rgba(106, 184, 255, .45)); }
 .ni.off { color: var(--red); filter: drop-shadow(0 0 4px rgba(239, 106, 106, .45)); }
-.sv-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
-.sv-legend > span { display: inline-flex; align-items: center; gap: 5px; }
-.sv-legend .ni { width: 14px; height: 14px; }
+.sv-legend { display: grid; grid-template-columns: repeat(3, max-content); justify-content: space-between; gap: 10px 18px; padding-top: 14px; margin-top: 4px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+.sv-legend > span { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+.sv-legend .ni { width: 15px; height: 15px; }
 
 /* DPS today */
 .dps-row { flex: 1 0 auto; display: grid; grid-template-columns: 20px 32px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
@@ -404,6 +404,7 @@ svg.lu { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: roun
   #next-list .er { grid-template-columns: 34px 1fr 92px; }
   .er { grid-template-columns: 38px 1fr 92px; }
   .er .at, .er .pill { display: none; }
+  .sv-legend { grid-template-columns: repeat(2, max-content); justify-content: start; column-gap: 28px; }
   .sv-row { grid-template-columns: 9px minmax(0, 1fr) 64px 34px 44px; }
   .cls-row { grid-template-columns: 28px 78px minmax(0, 1fr) 54px; }
   .app { grid-template-columns: 1fr; padding: 24px; gap: 24px; }
