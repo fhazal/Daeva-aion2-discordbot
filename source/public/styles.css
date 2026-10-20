@@ -235,9 +235,9 @@ svg.lu { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: roun
 .ni.lock, .ni.mnt { color: #f0a94b; }
 .ni.new { color: #6ab8ff; filter: drop-shadow(0 0 4px rgba(106, 184, 255, .45)); }
 .ni.off { color: var(--red); filter: drop-shadow(0 0 4px rgba(239, 106, 106, .45)); }
-.sv-legend { display: grid; grid-template-columns: repeat(3, max-content); justify-content: space-between; gap: 10px 18px; padding-top: 14px; margin-top: 4px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
-.sv-legend > span { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
-.sv-legend .ni { width: 15px; height: 15px; }
+.sv-legend { display: grid; grid-template-columns: repeat(3, max-content); justify-content: space-between; gap: 10px 12px; padding-top: 14px; margin-top: 4px; border-top: 1px solid var(--line); color: var(--muted); font-family: var(--title); font-size: 8.5px; font-weight: 400; letter-spacing: .03em; }
+.sv-legend > span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.sv-legend .ni { width: 12px; height: 12px; }
 
 /* DPS today */
 .dps-row { flex: 1 0 auto; display: grid; grid-template-columns: 20px 32px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }

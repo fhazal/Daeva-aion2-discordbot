@@ -1,6 +1,6 @@
 {
   "name": "aion2-discord-bot",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "AION 2 Discord bot — world event timers (/timer) with multi-region support",
   "type": "module",
   "engines": {

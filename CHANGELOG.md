@@ -4,6 +4,10 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.4.5 · 20 October 2026
+
+- **Website server status legend:** set in thin Orbitron like the box title, at a smaller fine-print size.
+
 ## 1.4.4 · 20 October 2026
 
 - **Website server status legend:** icons and labels in tidy columns (three on desktop, two on phones) instead of wrapping wherever they fall.
