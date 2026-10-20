@@ -119,7 +119,7 @@ export const gartuaCommand: Command = {
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const timer = store.get();
       const live = getCachedLiveGartuaEstimate() ?? (await getLiveGartuaEstimate());
-      const leadMin = Math.max(1, Number(process.env.GARTUA_ALERT_LEAD_MIN ?? 10));
+      const leadMin = Math.max(1, Number(process.env.GARTUA_ALERT_LEAD_MIN ?? 5));
       const lines = ["🐉 **Immortal Gartua · Beritra**"];
 
       if (live) {

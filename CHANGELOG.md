@@ -4,6 +4,10 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.4.9 · 21 October 2026
+
+- **Gartua alert 5 minutes before the spawn** (was 10), the same as Daeva Meter's banner. Servers can still change it with `GARTUA_ALERT_LEAD_MIN`.
+
 ## 1.4.8 · 21 October 2026
 
 - **BajuBesi Labs everywhere:** "Bajubesi Network" is now **BajuBesi Labs** on the website (FAQ, footer and links) and in the README.

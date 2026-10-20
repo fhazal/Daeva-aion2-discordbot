@@ -45,7 +45,7 @@ Event timers · live panels · Immortal Gartua tracking · Asia server status ·
 <td valign="top">
 
 ### 🐲 Immortal Gartua
-Follows the live Gartua feed and pings 10 minutes before the spawn. Trusted roles keep a manual `/gartua set` fallback.
+Follows the live Gartua feed and pings 5 minutes before the spawn (the same as Daeva Meter). Trusted roles keep a manual `/gartua set` fallback.
 
 </td>
 <td valign="top">

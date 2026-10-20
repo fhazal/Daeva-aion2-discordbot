@@ -199,7 +199,7 @@ async function fireDueAlerts(client: Client): Promise<void> {
 }
 
 
-const GARTUA_LEAD_MS = Math.max(1, Number(process.env.GARTUA_ALERT_LEAD_MIN ?? 10)) * 60_000;
+const GARTUA_LEAD_MS = Math.max(1, Number(process.env.GARTUA_ALERT_LEAD_MIN ?? 5)) * 60_000;
 const GARTUA_KEEP_MS = Math.max(5, Number(process.env.GARTUA_ALERT_KEEP_MIN ?? 60)) * 60_000;
 /** Never post for a spawn time this far in the past (e.g. a stale manual estimate). */
 const GARTUA_LATE_MS = 30 * 60_000;
