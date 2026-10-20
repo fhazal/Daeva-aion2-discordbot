@@ -4,6 +4,10 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.4.6 · 20 October 2026
+
+- **#aion2-news cards:** Steam posts keep their paragraphs, headings and bullet lists instead of running together. AION 2 logo header with the kind of post (Maintenance, Patch Notes, Event, News) and its own colour, plus a *Read on Steam* button. Maintenance notices show **Starts** and **Back online** in each reader's own time with a countdown, and what's affected.
+
 ## 1.4.5 · 20 October 2026
 
 - **Website server status legend:** set in thin Orbitron like the box title, at a smaller fine-print size.

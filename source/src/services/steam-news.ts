@@ -1,8 +1,9 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { EmbedBuilder, type Client } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, type Client } from "discord.js";
 import { logger } from "../lib/logger.js";
 import { daevaFooter } from "../version.js";
+import { clip, hoursText, NEWS_STYLE, newsKind, parseMaintenance, steamToDiscord, withoutMaintenanceLines } from "./steam-format.js";
 
 /** Posts official AION 2 Steam announcements (patch notes / news) to a channel. */
 const APP_ID = process.env.STEAM_APP_ID ?? "3393110";
@@ -11,9 +12,11 @@ const ROLE_ID = process.env.NEWS_ROLE_ID ?? "";
 const STATE_DIR = process.env.STATE_DIR ?? "/state";
 const FILE = path.join(STATE_DIR, "steam-news.json");
 const INTERVAL_MS = 10 * 60_000;
+/** The same AION 2 logo as the event panel header. */
+const AION2_ICON = "https://bajubesi.org/aion2-icon.webp";
 const API_URL = `https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/?appid=${APP_ID}&count=10&format=json`;
 
-type NewsItem = {
+export type NewsItem = {
   gid: string;
   title: string;
   url: string;
@@ -42,28 +45,48 @@ async function saveState(s: State): Promise<void> {
 }
 
 function firstImage(c: string): string | undefined {
-  const m = c.match(/\[img[^\]]*\]([^\[]+)\[\/img\]/i) ?? c.match(/<img[^>]+src="([^"]+)"/i);
+  const m =
+    c.match(/\[img\s+src=["']?([^"'\]\s]+)["']?[^\]]*\]/i) ??
+    c.match(/\[img[^\]]*\]([^\[]+)\[\/img\]/i) ??
+    c.match(/<img[^>]+src="([^"]+)"/i);
   const raw = m?.[1];
   if (!raw) return undefined;
   const u = raw.trim().replace("{STEAM_CLAN_IMAGE}", "https://clan.akamai.steamstatic.com/images");
   return /^https?:\/\//.test(u) ? u : undefined;
 }
 
-function summary(c: string, max = 350): string {
-  let t = c
-    .replace(/\[img[^\]]*\][^\[]*\[\/img\]/gi, "")
-    .replace(/\[url=[^\]]*\]([^\[]*)\[\/url\]/gi, "$1")
-    .replace(/\[\*\]/g, "• ")
-    .replace(/\[[^\]]+\]/g, "")
-    .replace(/<[^>]+>/g, "")
-    .replace(/\{STEAM_CLAN_IMAGE\}\S*/g, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-  if (t.length > max) t = t.slice(0, max).replace(/\s+\S*$/, "") + "…";
-  return t;
-}
+/** The Discord card for one Steam post: logo header, tidy text, maintenance times as fields, and a link button. */
+export function newsMessage(i: NewsItem) {
+  const kind = newsKind(i.title);
+  const style = NEWS_STYLE[kind];
+  let text = steamToDiscord(i.contents);
+  const maint = kind === "maintenance" ? parseMaintenance(text) : null;
+  if (maint) text = withoutMaintenanceLines(text);
 
-const isPatch = (title: string) => /patch|update|hotfix|maintenance|notes/i.test(title);
+  const embed = new EmbedBuilder()
+    .setColor(style.color)
+    .setAuthor({ name: `AION 2 · ${style.label}`, iconURL: AION2_ICON })
+    .setTitle(i.title.slice(0, 256))
+    .setURL(i.url)
+    .setDescription(clip(text, 700) || "Read the full post on Steam.")
+    .setTimestamp(new Date(i.date * 1000))
+    .setFooter(daevaFooter("Official announcement via Steam"));
+  if (maint) {
+    const s = Math.floor(maint.start / 1000);
+    embed.addFields({ name: "🕒 Starts", value: `<t:${s}:f>\n<t:${s}:R>`, inline: true });
+    if (maint.end && maint.hours) {
+      embed.addFields({ name: "✅ Back online", value: `<t:${Math.floor(maint.end / 1000)}:f>\n${hoursText(maint.hours)}`, inline: true });
+    }
+    if (maint.affected) embed.addFields({ name: "🖥️ Affected", value: maint.affected, inline: true });
+  }
+  const img = firstImage(i.contents);
+  if (img) embed.setImage(img);
+
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel(kind === "news" ? "Read the full post on Steam" : `Read the full ${kind === "patch" ? "patch notes" : "notice"} on Steam`).setURL(i.url),
+  );
+  return { embeds: [embed], components: /^https?:\/\//.test(i.url) ? [row] : [] };
+}
 
 async function checkNews(client: Client): Promise<void> {
   const res = await fetch(API_URL, { headers: { "user-agent": "Daeva-Discord-Bot" } });
@@ -95,21 +118,9 @@ async function checkNews(client: Client): Promise<void> {
   }
 
   for (const i of fresh) {
-    const patch = isPatch(i.title);
-    const embed = new EmbedBuilder()
-      .setColor(patch ? 0x2ecc71 : 0x3498db)
-      .setAuthor({ name: patch ? "🛠️ AION 2 · Patch Notes" : "📰 AION 2 · News" })
-      .setTitle(i.title.slice(0, 256))
-      .setURL(i.url)
-      .setDescription(summary(i.contents) || "Read the full post on Steam.")
-      .setTimestamp(new Date(i.date * 1000))
-      .setFooter(daevaFooter("Official announcement via Steam"));
-    const img = firstImage(i.contents);
-    if (img) embed.setImage(img);
-
     await channel.send({
       ...(ROLE_ID ? { content: `<@&${ROLE_ID}>` } : {}),
-      embeds: [embed],
+      ...newsMessage(i),
       allowedMentions: ROLE_ID ? { roles: [ROLE_ID] } : { parse: [] },
     });
     seen.add(String(i.gid));
