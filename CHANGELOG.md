@@ -4,6 +4,10 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.4.2 · 20 October 2026
+
+- **Website footer:** gold Orbitron column headings and a Lucide icon beside every link; *DPS today* renamed *DPS this month* to match the boards.
+
 ## 1.4.1 · 20 October 2026
 
 - **Website text a size smaller:** Rajdhani text about 9% smaller, block titles 17px, headline 40px.
