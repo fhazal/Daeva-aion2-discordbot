@@ -65,11 +65,11 @@ describe("version footer", () => {
 
   it("adds the version to every kind of footer", () => {
     const v = `Daeva v${DAEVA_VERSION}`;
-    expect(footerText()).toBe(v);
-    expect(footerText("Daeva • AION 2 Quick Guides")).toBe(`${v} • AION 2 Quick Guides`);
-    expect(footerText("Daeva · aion2.bajubesi.org")).toBe(`${v} · aion2.bajubesi.org`);
-    expect(footerText("Asia · T-15m")).toBe(`Asia · T-15m · ${v}`);
-    expect(footerText("Bajubesi Network legion roster", "last updated")).toBe(`Bajubesi Network legion roster · ${v} · last updated`);
-    expect(footerText(`${v} • already`)).toBe(`${v} • already`);
+    expect(footerText()).toBe(`${v} · BajuBesi Labs`);
+    expect(footerText("Daeva • AION 2 Quick Guides")).toBe(`${v} • AION 2 Quick Guides · BajuBesi Labs`);
+    expect(footerText(undefined, "aion2.bajubesi.org")).toBe(`${v} · BajuBesi Labs · aion2.bajubesi.org`);
+    expect(footerText("Asia · T-15m")).toBe(`Asia · T-15m · ${v} · BajuBesi Labs`);
+    expect(footerText("Legion Roster")).toBe(`Legion Roster · ${v} · BajuBesi Labs`);
+    expect(footerText(`${v} • already · BajuBesi Labs`)).toBe(`${v} • already · BajuBesi Labs`);
   });
 });

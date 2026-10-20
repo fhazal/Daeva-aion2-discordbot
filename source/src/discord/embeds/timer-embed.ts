@@ -209,6 +209,6 @@ export function buildTimerEmbed(params: {
       },
     )
     
-    .setFooter(daevaFooter("Daeva • Bajubesi Network • AION 2 Discord Assistant", undefined, params.guildId))
+    .setFooter(daevaFooter("Event Timers", undefined, params.guildId))
     .setTimestamp(new Date());
 }

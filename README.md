@@ -20,7 +20,7 @@ Event timers · live panels · Immortal Gartua tracking · Asia server status ·
 </div>
 
 > [!NOTE]
-> Daeva is an unofficial fan project by the **Bajubesi Network** community. It is not affiliated with or endorsed by NCSOFT. Event schedules are community-observed, so check them against the in-game clock after patches.
+> Daeva is an unofficial fan project by **BajuBesi Labs**. It is not affiliated with or endorsed by NCSOFT. Event schedules are community-observed, so check them against the in-game clock after patches.
 
 ---
 

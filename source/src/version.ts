@@ -3,17 +3,15 @@
  * Bump it with each release (new features: 1.4.0, fixes only: 1.3.1), in
  * step with package.json and CHANGELOG.md; a test checks they agree.
  */
-export const DAEVA_VERSION = "1.4.7";
+export const DAEVA_VERSION = "1.4.8";
 export const DAEVA_NAME = `Daeva v${DAEVA_VERSION}`;
 
-/** The maker's mark, shown wherever Daeva runs outside its home server(s). */
+/** The maker's mark, at the end of every card's footer. */
 export const CREDIT_NAME = "BajuBesi Labs";
-export const CREDIT_LINE = `by ${CREDIT_NAME}`;
 
 /**
- * Servers where the credit is left out: HOME_GUILD_IDS (comma-separated),
- * else GUILD_ID. Every other server, and every copy of the bot run by
- * someone else, shows "by BajuBesi Labs" in its footers.
+ * Home servers: HOME_GUILD_IDS (comma-separated), else GUILD_ID. /help adds
+ * an "About Daeva" section everywhere else.
  */
 export function homeGuildIds(env: NodeJS.ProcessEnv = process.env): Set<string> {
   return new Set((env.HOME_GUILD_IDS ?? env.GUILD_ID ?? "").split(",").map((s) => s.trim()).filter(Boolean));
@@ -32,13 +30,13 @@ export function setFooterIcon(url: string | undefined): void {
 }
 
 /**
- * A card footer with the version: a footer that starts with "Daeva" gets
- * the version there ("Daeva v1.3.0 • AION 2 Quick Guides"); any other text
- * keeps its wording with " · Daeva v1.3.0" added; no text gives just the
- * name. `tail` goes after the version (e.g. "last updated", which Discord
- * follows with the card's date).
+ * A card footer: what the card is, the version and the maker, e.g.
+ * "Legion Roster · Daeva v1.4.8 · BajuBesi Labs". A footer that starts with
+ * "Daeva" gets the version there ("Daeva v1.4.8 • AION 2 Quick Guides"); no
+ * text gives just the name. `tail` goes at the end (e.g. the website).
+ * `_guildId` is kept for callers; the credit now shows on every server.
  */
-export function footerText(text?: string, tail?: string, guildId?: string | null): string {
+export function footerText(text?: string, tail?: string, _guildId?: string | null): string {
   const t = text?.trim();
   const core = !t
     ? DAEVA_NAME
@@ -47,7 +45,7 @@ export function footerText(text?: string, tail?: string, guildId?: string | null
       : /^Daeva\b/.test(t)
         ? t.replace(/^Daeva\b/, DAEVA_NAME)
         : `${t} · ${DAEVA_NAME}`;
-  const credited = isHomeGuild(guildId) ? core : `${core} · ${CREDIT_LINE}`;
+  const credited = core.includes(CREDIT_NAME) ? core : `${core} · ${CREDIT_NAME}`;
   return tail ? `${credited} · ${tail}` : credited;
 }
 

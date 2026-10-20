@@ -94,7 +94,7 @@ export function newsMessage(n: NewsEntry, botIcon: string | undefined, guildId?:
     .setURL(SITE)
     .setDescription(n.intro)
     .addFields(n.items.slice(0, 20).map((i) => ({ name: `${i.emoji} ${i.title}`, value: clip(i.text) })))
-    .setFooter(daevaFooter("Daeva · aion2.bajubesi.org", undefined, guildId));
+    .setFooter(daevaFooter(undefined, "aion2.bajubesi.org", guildId));
   if (botIcon) embed.setThumbnail(botIcon);
   const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel("Open aion2.bajubesi.org").setEmoji("🌐").setURL(SITE),

@@ -18,14 +18,13 @@ describe("maker's credit", () => {
     expect(isHomeGuild("999", {} as NodeJS.ProcessEnv)).toBe(false);
   });
 
-  it("adds the credit only outside home", () => {
+  it("ends every footer with the maker, at home and elsewhere", () => {
     const prev = process.env.HOME_GUILD_IDS;
     process.env.HOME_GUILD_IDS = "111";
     try {
-      expect(footerText("T-10m", undefined, "111")).toBe(`T-10m · Daeva v${DAEVA_VERSION}`);
-      expect(footerText("T-10m", undefined, "999")).toBe(`T-10m · Daeva v${DAEVA_VERSION} · by BajuBesi Labs`);
-      expect(footerText(undefined, "aion2.bajubesi.org", "999")).toBe(`Daeva v${DAEVA_VERSION} · by BajuBesi Labs · aion2.bajubesi.org`);
-      expect(footerText("T-10m")).toBe(`T-10m · Daeva v${DAEVA_VERSION}`);
+      expect(footerText("Legion Roster", undefined, "111")).toBe(`Legion Roster · Daeva v${DAEVA_VERSION} · BajuBesi Labs`);
+      expect(footerText("T-10m", undefined, "999")).toBe(`T-10m · Daeva v${DAEVA_VERSION} · BajuBesi Labs`);
+      expect(footerText(undefined, "aion2.bajubesi.org", "999")).toBe(`Daeva v${DAEVA_VERSION} · BajuBesi Labs · aion2.bajubesi.org`);
     } finally {
       if (prev === undefined) delete process.env.HOME_GUILD_IDS;
       else process.env.HOME_GUILD_IDS = prev;

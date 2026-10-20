@@ -4,6 +4,13 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.4.8 · 21 October 2026
+
+- **BajuBesi Labs everywhere:** "Bajubesi Network" is now **BajuBesi Labs** on the website (FAQ, footer and links) and in the README.
+- **Tidier card footers:** every card ends the same way, *what it is · Daeva v1.4.8 · BajuBesi Labs*, on every server. The roster card reads *Legion Roster · Daeva v1.4.8 · BajuBesi Labs* with Discord's own date after it (no more "last updated"); the timer board says *Event Timers*, the guides *Community Guides* and *Quick Guides*.
+- **DPS boards count dungeon bosses:** dungeon versions of a boss (Conquest Vakron and Thamon, for example) have monster ids the gaming.tools data doesn't list, so their kills were dropped as "not a boss". Daeva now also reads A2Tools' boss list (by taengu), and as a last resort matches the boss by name.
+- **Upload log:** fights that arrive but don't count are logged with the reason, so "my fights never show up" can be answered.
+
 ## 1.4.7 · 20 October 2026
 
 - **Maker's credit outside home:** in servers other than the home server(s) (`HOME_GUILD_IDS`, else `GUILD_ID`), card footers end with *by BajuBesi Labs* and `/help` closes with an *About Daeva* section. Copies of the website hosted anywhere but aion2.bajubesi.org show *Made with ☕ by BajuBesi Labs*. The home server and the live site look exactly as before.

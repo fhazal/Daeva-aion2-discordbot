@@ -67,7 +67,8 @@ function profileCard(e: RosterEntry, note?: string, guildId?: string | null) {
       { name: "🛡️ Item level", value: formatNum(e.itemLevel), inline: true },
       { name: "🏰 Legion", value: e.legion ? `${displayLegion(e.legion)}${ours ? " ✓" : ""}` : "–", inline: true },
     )
-    .setFooter(daevaFooter("Bajubesi Network legion roster", "last updated", guildId))
+    // Discord shows the date after the footer, so it needs no "last updated".
+    .setFooter(daevaFooter("Legion Roster", undefined, guildId))
     .setTimestamp(new Date(e.updatedAt));
   // Faction under the name (custom emojis show in the description, not the author line).
   const lines = [e.faction ? `${factionEmoji(e.faction)} **${e.faction}**` : "", note ?? ""].filter(Boolean);
