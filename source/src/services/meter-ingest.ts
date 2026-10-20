@@ -66,7 +66,7 @@ export function allowUpload(userId: string, now = Date.now()): boolean {
 export async function ingestUpload(
   userId: string,
   body: unknown,
-  rankOf: (npcId: number) => Promise<string | null>,
+  rankOf: (npcId: number, name?: string) => Promise<string | null>,
   now = Date.now(),
 ): Promise<IngestResult> {
   if (!isObj(body)) return bad("Body must be a JSON object");
@@ -99,7 +99,7 @@ export async function ingestUpload(
   if (!targetName) return ignored("No target");
   const npcId = bossClock ? num(rec.clock_npc) : isObj(target) ? num(target.npc_id) : null;
   if (npcId == null || !Number.isInteger(npcId)) return ignored("Unknown monster");
-  const rank = await rankOf(npcId);
+  const rank = await rankOf(npcId, targetName);
   if (!isBossOrElite(rank)) return ignored("Not a boss or elite fight");
 
   const selfName = typeof rec.self_name === "string" ? rec.self_name.trim() : "";

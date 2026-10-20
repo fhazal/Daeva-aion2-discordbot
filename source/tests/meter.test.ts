@@ -4,7 +4,7 @@ import { createLink, fightsBetween, getLink, removeLink, userForToken, useMeterD
 import { buildBoard } from "../src/services/meter-board.js";
 import { monthStart } from "../src/services/meter-month.js";
 import { ingestUpload } from "../src/services/meter-ingest.js";
-import { isBossOrElite, ranksFromDevalue } from "../src/services/npc-ranks.js";
+import { isBossOrElite, lookupRank, npcRanksFromDevalue, ranksFromDevalue } from "../src/services/npc-ranks.js";
 
 const NOW = Date.UTC(2026, 9, 19, 3, 0, 0);
 const RANKS: Record<number, string> = { 2400002: "Legendary", 2000002: "Heroic", 2100001: "Elite", 1000001: "Common" };
@@ -180,6 +180,27 @@ describe("npc ranks", () => {
     expect(isBossOrElite("Elite")).toBe(true);
     expect(isBossOrElite("Common")).toBe(false);
     expect(isBossOrElite(null)).toBe(false);
+  });
+
+  // Vakron (Heroic) is listed; "Guard" is both a Common and an Elite monster.
+  const VARIANTS = `[[1,5,9],{"id":2,"name":3,"rankName":4},"2300582","Vakron","Heroic",{"id":6,"name":7,"rankName":8},"2100001","Guard","Common",{"id":10,"name":7,"rankName":11},"2100002","Elite"]`;
+
+  it("finds a dungeon variant missing from the list by its name", () => {
+    const ranks = npcRanksFromDevalue(VARIANTS);
+    expect(lookupRank(ranks, 2300582)).toBe("Heroic");
+    // Conquest Vakron has an id of its own that gaming.tools doesn't list.
+    expect(lookupRank(ranks, 2300812, "Vakron")).toBe("Heroic");
+    expect(lookupRank(ranks, 2300812)).toBeNull();
+  });
+
+  it("doesn't guess from a name shared by monsters of different ranks", () => {
+    expect(lookupRank(npcRanksFromDevalue(VARIANTS), 2199999, "Guard")).toBeNull();
+  });
+
+  it("counts a boss fight whose rank is only known by name", async () => {
+    const byName = async (id: number, name?: string) => RANKS[id] ?? (name === "Vakron" ? "Heroic" : null);
+    const r = await ingestUpload("u1", upload("BajuBesi", [{ name: "BajuBesi", dmg: 4_820_000, is_self: true }], { npc: 2300812, target: "Vakron" }), byName, NOW);
+    expect(r.status).toBe(200);
   });
 });
 
