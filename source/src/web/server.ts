@@ -357,6 +357,8 @@ async function handleMeterUpload(req: IncomingMessage, res: ServerResponse): Pro
 
   const result = await ingestUpload(userId, body, npcRank);
   if (result.status >= 400) logger.info({ userId, status: result.status, error: result.body.error }, "Daeva Meter upload refused");
+  // Accepted but not counted: log why, so "my fights never show up" can be answered.
+  else if (result.body.ignored) logger.info({ userId, reason: result.body.ignored }, "Daeva Meter upload not counted");
   reply(result.status, result.body);
 }
 
