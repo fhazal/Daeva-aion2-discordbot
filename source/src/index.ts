@@ -7,6 +7,7 @@ import { initGuildStore } from "./persistence/store.js";
 import { startWebServer } from "./web/server.js";
 import { startRosterRefresh } from "./services/legion.js";
 import { startGamingToolsMirror } from "./services/gaming-tools-mirror.js";
+import { startA2ToolsBosses } from "./services/a2tools-bosses.js";
 import { startMeterDaily } from "./services/meter-daily.js";
 import { startUpdates } from "./services/updates.js";
 import { DAEVA_VERSION, setFooterIcon } from "./version.js";
@@ -16,6 +17,7 @@ async function main(): Promise<void> {
   initGuildStore(env.DATABASE_PATH);
   const stopWeb = startWebServer();
   const stopMirror = startGamingToolsMirror();
+  const stopBosses = startA2ToolsBosses();
   let stopRoster: (() => void) | null = null;
   let stopMeter: (() => void) | null = null;
   let stopUpdates: (() => void) | null = null;
@@ -35,6 +37,7 @@ async function main(): Promise<void> {
     stoppers?.stopServerStatusCleanup();
     stopWeb();
     stopMirror();
+    stopBosses();
     stopRoster?.();
     stopMeter?.();
     stopUpdates?.();

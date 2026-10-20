@@ -135,7 +135,7 @@ Everything specific to your community lives in `.env`, and nothing in the code i
 
 ## 📊 Daeva Meter DPS boards
 
-Members run `/meter link` to get a private token and paste it into Daeva Meter (Settings → Share with Daeva bot). The meter then posts finished fights to `POST /api/meter` (contract: `docs/BOT_API.md` in the meter repo). Daeva keeps only real boss and elite fights of 20 s to 30 min, decides the monster's rank itself from the gaming.tools mirror, works out DPS from damage ÷ duration, merges duplicate party uploads and shows linked members only.
+Members run `/meter link` to get a private token and paste it into Daeva Meter (Settings → Share with Daeva bot). The meter then posts finished fights to `POST /api/meter` (contract: `docs/BOT_API.md` in the meter repo). Daeva keeps only real boss and elite fights of 20 s to 30 min, decides the monster's rank itself (gaming.tools ranks, then A2Tools' boss list for dungeon variants, then the monster's name), works out DPS from damage ÷ duration, merges duplicate party uploads and shows linked members only.
 
 - `GET /api/dps-today` feeds the site's **Highest DPS today** (top 10) and **Class DPS today** cards; "today" runs from daily reset to daily reset.
 - `/meter recap #channel` posts a daily recap 5 minutes before reset.
@@ -181,6 +181,7 @@ Daeva reads public data from other services. If you run your own copy, please ke
 - **Aion2Timers feed:** used for Gartua timing, cached for 60 seconds.
 - **Server status:** read through axsddlr's aion2_api, once a minute.
 - **gaming.tools data and icons:** refreshed once a day and served from our own server.
+- **A2Tools boss list:** downloaded from GitHub once a day, read only by the bot.
 
 ---
 
@@ -189,6 +190,7 @@ Daeva reads public data from other services. If you run your own copy, please ke
 - **[kectx/aion2-discord-bot](https://github.com/kectx/aion2-discord-bot)** is the foundation Daeva grew from (MIT, licence kept in [`source/LICENSE`](source/LICENSE)).
 - **[axsddlr/aion2_api](https://github.com/axsddlr/aion2_api)** by Andre Saddler (MIT) powers the server-status data. The Docker build downloads it from upstream at a pinned commit and verifies its checksum. Thanks for fixing the missing-columns issue upstream!
 - **[AION 2 Global Database](https://aion2.gaming.tools/)** by the gaming.tools team supplies the monster and skill names and icons that Daeva mirrors for [Daeva Meter](https://github.com/fhazal/DAEVA-dps-meter) (`/api/gt`). Used with the kind permission of its admin, Thank you!
+- **[A2Tools DPS Meter](https://github.com/taengu/A2Tools-DPS-Meter)** by taengu (GPL-3.0): its list of which monsters are bosses, including dungeon variants such as Conquest Vakron, decides which shared fights count on the DPS boards. Daeva downloads it once a day and only reads it; none of it is copied into this project or served from our site.
 - **[Aion2Timers](https://www.aion2timers.com)** provides the community-reported Gartua kill times behind the live Gartua estimate; `/gartua set` remains the manual fallback.
 - Daeva's own additions and changes are released under the [MIT licence](LICENSE).
 

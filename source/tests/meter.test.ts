@@ -4,7 +4,8 @@ import { createLink, fightsBetween, getLink, removeLink, userForToken, useMeterD
 import { buildBoard } from "../src/services/meter-board.js";
 import { monthStart } from "../src/services/meter-month.js";
 import { ingestUpload } from "../src/services/meter-ingest.js";
-import { isBossOrElite, lookupRank, npcRanksFromDevalue, ranksFromDevalue } from "../src/services/npc-ranks.js";
+import { bossIdsFromA2Tools } from "../src/services/a2tools-bosses.js";
+import { BOSS_RANK, isBossOrElite, lookupRank, npcRanksFromDevalue, ranksFromDevalue } from "../src/services/npc-ranks.js";
 
 const NOW = Date.UTC(2026, 9, 19, 3, 0, 0);
 const RANKS: Record<number, string> = { 2400002: "Legendary", 2000002: "Heroic", 2100001: "Elite", 1000001: "Common" };
@@ -195,6 +196,24 @@ describe("npc ranks", () => {
 
   it("doesn't guess from a name shared by monsters of different ranks", () => {
     expect(lookupRank(npcRanksFromDevalue(VARIANTS), 2199999, "Guard")).toBeNull();
+  });
+
+  it("reads the boss ids from an A2Tools npc file", () => {
+    const src = `{"2300812":{"name":"Vakron","isBoss":true},"2100001":{"name":"Guard","isBoss":false},"2000000":{"name":"Punching Bag","isBoss":false,"isDummy":true}}`;
+    expect([...bossIdsFromA2Tools(src)]).toEqual([2300812]);
+    expect(bossIdsFromA2Tools("[]").size).toBe(0);
+  });
+
+  it("prefers gaming.tools, then the A2Tools boss list, then the name", () => {
+    const ranks = npcRanksFromDevalue(VARIANTS);
+    // gaming.tools has the id: its rank wins, even over A2Tools.
+    expect(lookupRank(ranks, 2100001, "Guard", true)).toBe("Common");
+    // Not in gaming.tools, a boss in A2Tools.
+    expect(lookupRank(ranks, 2320812, "Unknown name", true)).toBe(BOSS_RANK);
+    expect(isBossOrElite(BOSS_RANK)).toBe(true);
+    // In neither list: the name decides.
+    expect(lookupRank(ranks, 2300812, "Vakron", false)).toBe("Heroic");
+    expect(lookupRank(ranks, 2399999, "Nobody", false)).toBeNull();
   });
 
   it("counts a boss fight whose rank is only known by name", async () => {

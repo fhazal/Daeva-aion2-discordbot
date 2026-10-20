@@ -1,6 +1,7 @@
 import { readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { logger } from "../lib/logger.js";
+import { a2ToolsIsBoss } from "./a2tools-bosses.js";
 import { mirrorDir } from "./gaming-tools-mirror.js";
 
 /**
@@ -55,14 +56,19 @@ export function ranksFromDevalue(src: string): Map<number, string> {
   return npcRanksFromDevalue(src).byId;
 }
 
-/** A rank looked up by npc id, else by the monster's name (dungeon variants such as
- * Conquest Vakron have ids of their own that gaming.tools doesn't list). */
-export function lookupRank(ranks: NpcRanks, npcId: number, name?: string): string | null {
-  return ranks.byId.get(npcId) ?? (name ? ranks.byName.get(nameKey(name)) : undefined) ?? null;
+/** Rank given to monsters known only from A2Tools' boss list (it has no ranks). */
+export const BOSS_RANK = "Boss";
+
+/** A rank by gaming.tools npc id, else "Boss" when A2Tools lists the id as a
+ * boss, else by the monster's name. Dungeon variants such as Conquest Vakron
+ * have ids of their own that gaming.tools doesn't list. */
+export function lookupRank(ranks: NpcRanks, npcId: number, name?: string, a2Boss?: boolean | null): string | null {
+  return ranks.byId.get(npcId) ?? (a2Boss ? BOSS_RANK : undefined) ?? (name ? ranks.byName.get(nameKey(name)) : undefined) ?? null;
 }
 
 /** The rank of a monster, or null when unknown or the data isn't mirrored yet. */
 export async function npcRank(npcId: number, name?: string): Promise<string | null> {
+  const a2Boss = await a2ToolsIsBoss(npcId);
   const file = join(mirrorDir(), "npcs.d.json");
   try {
     const { mtimeMs } = await stat(file);
@@ -73,10 +79,10 @@ export async function npcRank(npcId: number, name?: string): Promise<string | nu
   } catch (error) {
     if (!cache) {
       logger.warn({ err: error }, "Monster ranks unavailable (gaming.tools mirror not ready)");
-      return null;
+      return a2Boss ? BOSS_RANK : null;
     }
   }
-  return cache ? lookupRank(cache, npcId, name) : null;
+  return cache ? lookupRank(cache, npcId, name, a2Boss) : null;
 }
 
 /** Boss and elite ranks count for the DPS boards; Common and unknown don't. */
