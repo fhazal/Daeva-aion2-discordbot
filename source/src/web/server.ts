@@ -94,8 +94,8 @@ type Overview = {
     reportedAt: string | null;
   } | null;
   status: { fetchedAt: string | null; servers: ServerRow[] } | null;
-  /** The Beritra game server Daeva Meter times for its ping (BERITRA_PROBE_HOST/PORT), scrambled. */
-  latency_probe: { code: string } | null;
+  /** Game servers Daeva Meter times for its ping, by server number (scrambled). */
+  latency_probes: Array<{ servers: string; name: string; code: string }>;
 };
 
 const overviewCache = new Map<string, { at: number; body: string }>();
@@ -172,18 +172,42 @@ function readGartua(): Overview["gartua"] {
   return null;
 }
 
-/**
- * Only a configured game server (an IPv4 address with a port), never the
- * generic Tokyo estimate. Sent scrambled, the way Daeva Meter stores it: the
- * game keeps this server behind Cloudflare, so the feed doesn't spell it out.
- */
-export function meterProbe(env: Record<string, string | undefined> = process.env): Overview["latency_probe"] {
-  const t = resolveProbeTarget(env);
-  if (t.kind !== "beritra" || t.method !== "tcp") return null;
-  const ip = t.host.split(".").map(Number);
+/** The Asia servers (1501-1510, 2501-2510), all on the Tokyo game servers. */
+const ASIA_SERVERS = "1501-1510,2501-2510";
+const RANGES = /^\d+(-\d+)?(,\d+(-\d+)?)*$/;
+
+/** An IPv4 game server, scrambled the way Daeva Meter stores it. */
+function scramble(host: string, port: number): string | null {
+  const ip = host.split(".").map(Number);
   if (ip.length !== 4 || ip.some((b) => !Number.isInteger(b) || b < 0 || b > 255)) return null;
-  const bytes = [...ip, t.port >> 8, t.port & 0xff].map((b) => b ^ 0xa7);
-  return { code: Buffer.from(bytes).toString("hex") };
+  if (!Number.isInteger(port) || port <= 0 || port > 65535) return null;
+  return Buffer.from([...ip, port >> 8, port & 0xff].map((b) => b ^ 0xa7)).toString("hex");
+}
+
+/**
+ * The game servers Daeva Meter times for its ping, by server number. The game
+ * keeps them behind Cloudflare, so the feed never spells an address out.
+ * BERITRA_PROBE_HOST/PORT (the one Daeva measures) covers the Asia servers;
+ * METER_PING_SERVERS adds regions without a new meter, e.g.
+ *   METER_PING_SERVERS=3001-3020=Seoul@203.0.113.5:13328;4001-4010=Taipei@198.51.100.7:13328
+ */
+export function meterProbes(env: Record<string, string | undefined> = process.env): Overview["latency_probes"] {
+  const out: Overview["latency_probes"] = [];
+  for (const entry of (env.METER_PING_SERVERS ?? "").split(";").map((s) => s.trim()).filter(Boolean)) {
+    const [, rawServers = "", name = "", host = "", port = ""] = /^([\d,\s-]+)=([^@]{1,24})@([\d.]+):(\d+)$/.exec(entry) ?? [];
+    const servers = rawServers.replace(/\s/g, "");
+    const code = host ? scramble(host, Number(port)) : null;
+    if (!RANGES.test(servers) || !code) {
+      logger.warn({ entry: entry.replace(/@.*/, "@…") }, "METER_PING_SERVERS entry ignored (expected servers=Name@ip:port)");
+      continue;
+    }
+    out.push({ servers, name: name.trim(), code });
+  }
+  // Never the generic Tokyo estimate: only a configured game server.
+  const t = resolveProbeTarget(env);
+  const asia = t.kind === "beritra" && t.method === "tcp" ? scramble(t.host, t.port) : null;
+  if (asia) out.push({ servers: ASIA_SERVERS, name: "Tokyo", code: asia });
+  return out;
 }
 
 async function buildOverview(regionId: string): Promise<string | null> {
@@ -230,7 +254,7 @@ async function buildOverview(regionId: string): Promise<string | null> {
     events,
     gartua: region.id === GARTUA_REGION ? readGartua() : null,
     status: region.id === GARTUA_REGION ? await readServerStatus() : null,
-    latency_probe: region.id === GARTUA_REGION ? meterProbe() : null,
+    latency_probes: meterProbes(),
   };
 
   const body = JSON.stringify(overview);
