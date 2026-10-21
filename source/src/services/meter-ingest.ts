@@ -18,6 +18,13 @@ const HP_SLACK = 2;
 /** Verified ✓: the meter saw at least this share of the boss's HP. */
 export const VERIFIED_MIN = 0.97;
 const NAME = /^[\p{L}\p{N}]{2,24}$/u;
+/**
+ * Placeholders the meter shows before the game names someone ("You" for
+ * yourself). They pass NAME but aren't characters: one became a "You" on the
+ * monthly board.
+ */
+const PLACEHOLDER = new Set(["you", "unknown", "player"]);
+export const isCharacterName = (name: string): boolean => NAME.test(name) && !PLACEHOLDER.has(name.toLowerCase());
 
 const CLASSES: Record<string, string> = {
   gladiator: "Gladiator",
@@ -103,7 +110,7 @@ export async function ingestUpload(
   if (!isBossOrElite(rank)) return ignored("Not a boss or elite fight");
 
   const selfName = typeof rec.self_name === "string" ? rec.self_name.trim() : "";
-  if (!NAME.test(selfName)) return ignored("Your character isn't known yet");
+  if (!isCharacterName(selfName)) return ignored("Your character isn't known yet");
 
   const players = rec.players;
   if (!Array.isArray(players) || players.length === 0) return bad("Missing players");
@@ -116,7 +123,7 @@ export async function ingestUpload(
     if (!isObj(p) || typeof p.name !== "string") continue;
     const name = p.name.trim();
     const damage = num(p.dmg);
-    if (!NAME.test(name) || damage == null || damage < 0) continue;
+    if (!isCharacterName(name) || damage == null || damage < 0) continue;
     let onTarget: number | null = null;
     if (Array.isArray(p.targets) && targetId != null) {
       const t = p.targets.find((x) => isObj(x) && num(x.id) === targetId);

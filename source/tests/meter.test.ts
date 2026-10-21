@@ -153,6 +153,13 @@ describe("ingestUpload", () => {
     expect(names).toEqual(["BajuBesi", "ExamElope", "ExamElope"]);
   });
 
+  it("never stores the meter's placeholder names (You)", async () => {
+    createLink("u1", NOW);
+    const r = await ingestUpload("u1", upload("You", [{ name: "You", class: "Cleric", dmg: 1_000_000, is_self: true }]), rankOf, NOW);
+    expect(r.body.ignored).toBe("Your character isn't known yet");
+    expect(fightsBetween(0, NOW + 1)).toHaveLength(0);
+  });
+
   it("refuses a character already linked to someone else", async () => {
     createLink("u1", NOW);
     createLink("u2", NOW);

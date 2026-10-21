@@ -4,6 +4,10 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.4.10 · 21 October 2026
+
+- **No more "You" on the DPS boards.** A Daeva Meter that didn't know your character's name yet sent its placeholder *You*, and the bot took it for a character (it reached the monthly board). Placeholder names (*You*, *Unknown*, *Player*) are now refused, and the existing *You* fights were moved to the real character.
+
 ## 1.4.9 · 21 October 2026
 
 - **Gartua alert 5 minutes before the spawn** (was 10), the same as Daeva Meter's banner. Servers can still change it with `GARTUA_ALERT_LEAD_MIN`.
