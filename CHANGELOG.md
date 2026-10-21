@@ -4,6 +4,10 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.5.0 · 22 October 2026
+
+- **Daeva Meter ping follows the game server:** the schedule feed (/api/overview, Asia) now tells Daeva Meter which Beritra server to time for its ping (`BERITRA_PROBE_HOST` / `BERITRA_PROBE_PORT`, the same one Daeva measures). If the game server moves, change it here and every meter follows within a minute.
+
 ## 1.4.10 · 21 October 2026
 
 - **No more "You" on the DPS boards.** A Daeva Meter that didn't know your character's name yet sent its placeholder *You*, and the bot took it for a character (it reached the monthly board). Placeholder names (*You*, *Unknown*, *Player*) are now refused, and the existing *You* fights were moved to the real character.

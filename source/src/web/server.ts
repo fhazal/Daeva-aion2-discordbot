@@ -14,6 +14,7 @@ import { userForToken } from "../persistence/meter.js";
 import { dpsMonthJson, dpsTodayJson } from "../services/meter-daily.js";
 import { allowUpload, ingestUpload } from "../services/meter-ingest.js";
 import { npcRank } from "../services/npc-ranks.js";
+import { resolveProbeTarget } from "../services/asia-status.js";
 
 /**
  * Daeva web — read-only timers site for aion2.bajubesi.org.
@@ -93,6 +94,8 @@ type Overview = {
     reportedAt: string | null;
   } | null;
   status: { fetchedAt: string | null; servers: ServerRow[] } | null;
+  /** The Beritra game server Daeva Meter times for its ping (BERITRA_PROBE_HOST/PORT). */
+  latency_probe: { host: string; port: number } | null;
 };
 
 const overviewCache = new Map<string, { at: number; body: string }>();
@@ -169,6 +172,12 @@ function readGartua(): Overview["gartua"] {
   return null;
 }
 
+/** Only a configured game server (with a port): never the generic Tokyo estimate. */
+function meterProbe(): Overview["latency_probe"] {
+  const t = resolveProbeTarget();
+  return t.kind === "beritra" && t.method === "tcp" ? { host: t.host, port: t.port } : null;
+}
+
 async function buildOverview(regionId: string): Promise<string | null> {
   const cached = overviewCache.get(regionId);
   if (cached && Date.now() - cached.at < OVERVIEW_CACHE_MS) return cached.body;
@@ -213,6 +222,7 @@ async function buildOverview(regionId: string): Promise<string | null> {
     events,
     gartua: region.id === GARTUA_REGION ? readGartua() : null,
     status: region.id === GARTUA_REGION ? await readServerStatus() : null,
+    latency_probe: region.id === GARTUA_REGION ? meterProbe() : null,
   };
 
   const body = JSON.stringify(overview);
