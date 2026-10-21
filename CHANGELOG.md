@@ -4,6 +4,10 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.5.1 · 22 October 2026
+
+- **The meter's ping target is no longer readable in the feed:** the game keeps its Beritra server behind Cloudflare, so the feed now sends it scrambled, the way Daeva Meter stores it.
+
 ## 1.5.0 · 22 October 2026
 
 - **Daeva Meter ping follows the game server:** the schedule feed (/api/overview, Asia) now tells Daeva Meter which Beritra server to time for its ping (`BERITRA_PROBE_HOST` / `BERITRA_PROBE_PORT`, the same one Daeva measures). If the game server moves, change it here and every meter follows within a minute.

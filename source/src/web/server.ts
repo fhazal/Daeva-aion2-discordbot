@@ -94,8 +94,8 @@ type Overview = {
     reportedAt: string | null;
   } | null;
   status: { fetchedAt: string | null; servers: ServerRow[] } | null;
-  /** The Beritra game server Daeva Meter times for its ping (BERITRA_PROBE_HOST/PORT). */
-  latency_probe: { host: string; port: number } | null;
+  /** The Beritra game server Daeva Meter times for its ping (BERITRA_PROBE_HOST/PORT), scrambled. */
+  latency_probe: { code: string } | null;
 };
 
 const overviewCache = new Map<string, { at: number; body: string }>();
@@ -172,10 +172,18 @@ function readGartua(): Overview["gartua"] {
   return null;
 }
 
-/** Only a configured game server (with a port): never the generic Tokyo estimate. */
-function meterProbe(): Overview["latency_probe"] {
-  const t = resolveProbeTarget();
-  return t.kind === "beritra" && t.method === "tcp" ? { host: t.host, port: t.port } : null;
+/**
+ * Only a configured game server (an IPv4 address with a port), never the
+ * generic Tokyo estimate. Sent scrambled, the way Daeva Meter stores it: the
+ * game keeps this server behind Cloudflare, so the feed doesn't spell it out.
+ */
+export function meterProbe(env: Record<string, string | undefined> = process.env): Overview["latency_probe"] {
+  const t = resolveProbeTarget(env);
+  if (t.kind !== "beritra" || t.method !== "tcp") return null;
+  const ip = t.host.split(".").map(Number);
+  if (ip.length !== 4 || ip.some((b) => !Number.isInteger(b) || b < 0 || b > 255)) return null;
+  const bytes = [...ip, t.port >> 8, t.port & 0xff].map((b) => b ^ 0xa7);
+  return { code: Buffer.from(bytes).toString("hex") };
 }
 
 async function buildOverview(regionId: string): Promise<string | null> {
