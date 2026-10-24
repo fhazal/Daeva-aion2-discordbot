@@ -342,8 +342,10 @@ svg.lu { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: roun
 .signed { display: flex; align-items: center; gap: 8px; margin-top: 14px; color: var(--muted); font-size: 13px; }
 .signed .ic { color: var(--green); }
 .signed a { color: var(--sky); font-weight: 600; }
-.text-link { display: inline-flex; align-items: center; gap: 6px; margin-left: 14px; color: var(--sky); font-size: 14px; font-weight: 600; }
-.text-link .ic { width: 14px; height: 14px; }
+.btn.gh { margin-left: 10px; background: rgba(232, 176, 75, .06); border-color: rgba(232, 176, 75, .55); color: var(--gold2); }
+.btn.gh:hover { background: rgba(232, 176, 75, .14); border-color: var(--gold); }
+.btn.gh .gh-mark { width: 18px; height: 18px; }
+.btn.gh .ext { width: 14px; height: 14px; opacity: .7; }
 
 /* Feature tiles and FAQ */
 .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
@@ -411,7 +413,7 @@ svg.lu { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: roun
   .cls-row { grid-template-columns: 28px 78px minmax(0, 1fr) 54px; }
   .app { grid-template-columns: 1fr; padding: 24px; gap: 24px; }
   .app img { max-width: 300px; }
-  .text-link { margin: 14px 0 0; display: flex; }
+  .btn.gh { margin: 12px 0 0; display: flex; width: max-content; }
   .footer .cols { grid-template-columns: 1fr 1fr; }
   .footer .cols > div:first-child { grid-column: 1 / -1; }
 }

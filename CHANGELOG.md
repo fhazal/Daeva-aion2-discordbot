@@ -4,6 +4,11 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.7.1 · 25 October 2026
+
+- **Website, Daeva Meter section:** a new picture with the 0.5.2 meter (an event alert, the Classic layout and the Solo layout), the list mentions both layouts and that the meter updates itself, and *Open source on GitHub* is now a gold-outline button with the GitHub logo.
+- **Daeva Meter release posts** show the wide picture from the meter's README instead of the old tall one.
+
 ## 1.7.0 · 24 October 2026
 
 - **Maintenance notice alerts clear themselves:** each alert now shows an *Auto-clears* countdown and is deleted after 24 hours (12 hours for *Temporary Maintenance*), so the alerts channel stops filling up.

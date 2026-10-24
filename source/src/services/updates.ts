@@ -22,7 +22,7 @@ import { daevaFooter } from "../version.js";
 const REPO = "fhazal/DAEVA-dps-meter";
 const SITE = "https://aion2.bajubesi.org";
 const METER_ICON = `${SITE}/meter-icon.png`;
-const METER_SHOT = `${SITE}/daeva-meter.png`;
+const METER_SHOT = `${SITE}/meter-showcase.png`; // wide README picture; daeva-meter.png is the tall one for the site
 const POLL_MS = 15 * 60_000;
 const UA = { "user-agent": "Daeva-Discord-Bot (+https://aion2.bajubesi.org)", accept: "application/vnd.github+json" };
 
