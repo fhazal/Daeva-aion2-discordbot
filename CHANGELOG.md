@@ -4,6 +4,11 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.7.0 · 24 October 2026
+
+- **Maintenance notice alerts clear themselves:** each alert now shows an *Auto-clears* countdown and is deleted after 24 hours (12 hours for *Temporary Maintenance*), so the alerts channel stops filling up.
+- **No more repeats or old news:** the bot remembers every notice it has seen in its database, so a restart or a feed hiccup can't post one twice, and a notice published more than 48 hours ago is never announced.
+
 ## 1.6.0 · 22 October 2026
 
 - **Daeva Meter ping for every region:** the feed now lists game servers by server number (the Asia servers are the Tokyo one Daeva measures). Other regions can be added with `METER_PING_SERVERS` in `.env` and a restart: every Daeva Meter on those servers then shows its real ping, with no new meter version. Addresses stay scrambled.

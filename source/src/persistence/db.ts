@@ -70,6 +70,23 @@ function migrate(database: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_server_status_messages_expiry
       ON server_status_messages (expires_at);
 
+    CREATE TABLE IF NOT EXISTS asia_notice_seen (
+      notice_id TEXT PRIMARY KEY NOT NULL,
+      seen_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS asia_notice_messages (
+      notice_id TEXT NOT NULL,
+      channel_id TEXT NOT NULL,
+      message_id TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      deleted_at TEXT,
+      PRIMARY KEY (notice_id, channel_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_asia_notice_messages_expiry
+      ON asia_notice_messages (expires_at);
+
     CREATE TABLE IF NOT EXISTS gartua_timer (
       singleton_id INTEGER PRIMARY KEY CHECK (singleton_id = 1),
       guild_id TEXT NOT NULL,

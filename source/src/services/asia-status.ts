@@ -11,6 +11,8 @@ import { lookup } from "node:dns/promises";
 import net from "node:net";
 import { promisify } from "node:util";
 import { daevaFooter } from "../version.js";
+import { getDatabase } from "../persistence/db.js";
+import { isStaleNotice, noticeLifetimeMs } from "./notice-alerts.js";
 
 const API_URL = "https://aion2.tools/api/server-status?region=as";
 const POLL_INTERVAL_MS = 60_000;
@@ -647,12 +649,40 @@ export function buildAsiaStatusEmbed(
   return embed;
 }
 
+/** Deletes notice alerts whose time is up; the row stays so the notice isn't announced again. */
+async function deleteExpiredNoticeAlerts(client: Client): Promise<void> {
+  const database = getDatabase(process.env.DATABASE_PATH || "./data/bot.sqlite");
+  const nowIso = new Date().toISOString();
+  const expired = database.prepare(
+    `SELECT notice_id AS noticeId, channel_id AS channelId, message_id AS messageId
+     FROM asia_notice_messages
+     WHERE deleted_at IS NULL AND expires_at <= ?`,
+  ).all(nowIso) as Array<{ noticeId: string; channelId: string; messageId: string }>;
+
+  for (const item of expired) {
+    try {
+      const channel = await client.channels.fetch(item.channelId).catch(() => null);
+      if (channel?.isTextBased() && !channel.isDMBased()) {
+        const message = await (channel as TextChannel).messages
+          .fetch(item.messageId).catch(() => null);
+        if (message) await message.delete().catch(() => undefined);
+      }
+      database.prepare(
+        `UPDATE asia_notice_messages SET deleted_at = ?
+         WHERE notice_id = ? AND channel_id = ?`,
+      ).run(nowIso, item.noticeId, item.channelId);
+      logger.info({ channelId: item.channelId, noticeId: item.noticeId }, "Expired Asia notice alert cleaned up");
+    } catch (error) {
+      logger.warn({ err: error, noticeId: item.noticeId }, "Failed to clean up expired Asia notice alert");
+    }
+  }
+}
+
 /**
- * Establishes a baseline on startup, then announces newly appearing notices.
+ * Announces newly appearing notices (the first run only records what is there).
  * It deliberately does not infer server online/offline transitions from roster data.
  */
 export function startAsiaStatusMonitor(client: Client): () => void {
-  let seenNoticeIds: Set<string> | null = null;
   let running = false;
 
   const tick = async () => {
@@ -660,55 +690,88 @@ export function startAsiaStatusMonitor(client: Client): () => void {
     running = true;
 
     try {
-      const snapshot = await getAsiaStatus(true);
-      const currentIds = new Set(snapshot.notices.map((notice) => notice.id));
+      await deleteExpiredNoticeAlerts(client);
 
-      if (seenNoticeIds !== null) {
-        const newNotices = snapshot.notices.filter(
-          (notice) => !seenNoticeIds!.has(notice.id),
+      const snapshot = await getAsiaStatus(true);
+      const database = getDatabase(process.env.DATABASE_PATH || "./data/bot.sqlite");
+
+      // The seen list lives in the database, so a restart or a feed glitch can't
+      // announce a notice twice. The very first run only records what is there.
+      const firstRun = (database
+        .prepare("SELECT COUNT(*) AS n FROM asia_notice_seen")
+        .get() as { n: number }).n === 0;
+      const markSeen = database.prepare(
+        "INSERT OR IGNORE INTO asia_notice_seen (notice_id, seen_at) VALUES (?, ?)",
+      );
+      const isSeen = database.prepare(
+        "SELECT 1 FROM asia_notice_seen WHERE notice_id = ?",
+      );
+
+      const now = Date.now();
+      const newNotices = snapshot.notices.filter(
+        (notice) => !isSeen.get(notice.id),
+      );
+      for (const notice of newNotices) {
+        markSeen.run(notice.id, new Date(now).toISOString());
+      }
+
+      // Old news (and everything seen on the very first run) is recorded, not posted.
+      const announce = firstRun
+        ? []
+        : newNotices.filter((notice) => !isStaleNotice(notice.publishedAt, now));
+
+      if (announce.length > 0) {
+        const channelIds = [
+          ...new Set(getPanelStore().listAll().map((panel) => panel.channelId)),
+        ];
+        const saveMessage = database.prepare(
+          `INSERT OR REPLACE INTO asia_notice_messages
+             (notice_id, channel_id, message_id, expires_at, deleted_at)
+           VALUES (?, ?, ?, ?, NULL)`,
         );
 
-        if (newNotices.length > 0) {
-          const channelIds = [
-            ...new Set(getPanelStore().listAll().map((panel) => panel.channelId)),
-          ];
+        for (const notice of announce) {
+          const expiresAt = now + noticeLifetimeMs(notice.title);
+          const embed = new EmbedBuilder()
+            .setColor(0xe6b422)
+            .setTitle(`🛠️ AION 2 Asia Notice · ${notice.title}`)
+            .setDescription(
+              `${notice.scope ? `Scope: **${notice.scope}**\n` : ""}` +
+              "A new notice appeared in the status feed. Check the official details.",
+            )
+            .setFooter(daevaFooter())
+            .setTimestamp(new Date());
 
-          for (const notice of newNotices) {
-            const embed = new EmbedBuilder()
-              .setColor(0xe6b422)
-              .setTitle(`🛠️ AION 2 Asia Notice · ${notice.title}`)
-              .setDescription(
-                `${notice.scope ? `Scope: **${notice.scope}**\n` : ""}` +
-                "A new notice appeared in the status feed. Check the official details.",
-              )
-              .setFooter(daevaFooter())
-              .setTimestamp(new Date());
+          if (notice.url) embed.setURL(notice.url);
+          if (notice.publishedAt) {
+            embed.addFields({
+              name: "Published",
+              value: `<t:${Math.floor(Date.parse(notice.publishedAt) / 1000)}:F>`,
+            });
+          }
+          embed.addFields({
+            name: "Auto-clears",
+            value: `<t:${Math.floor(expiresAt / 1000)}:R>`,
+          });
 
-            if (notice.url) embed.setURL(notice.url);
-            if (notice.publishedAt) {
-              embed.addFields({
-                name: "Published",
-                value: `<t:${Math.floor(Date.parse(notice.publishedAt) / 1000)}:F>`,
-              });
-            }
+          for (const channelId of channelIds) {
+            const channel = await client.channels.fetch(channelId).catch(() => null);
+            if (!channel || !channel.isTextBased() || channel.isDMBased()) continue;
 
-            for (const channelId of channelIds) {
-              const channel = await client.channels.fetch(channelId).catch(() => null);
-              if (!channel || !channel.isTextBased() || channel.isDMBased()) continue;
-
-              const guildId = (channel as TextChannel).guildId;
-              await (channel as TextChannel).send({
-                embeds: [EmbedBuilder.from(embed.toJSON()).setFooter(daevaFooter(undefined, undefined, guildId))],
-                allowedMentions: { parse: [] },
-              }).catch((error: unknown) => {
-                logger.warn({ err: error, channelId }, "Could not send Asia notice alert");
-              });
+            const guildId = (channel as TextChannel).guildId;
+            const sent = await (channel as TextChannel).send({
+              embeds: [EmbedBuilder.from(embed.toJSON()).setFooter(daevaFooter(undefined, undefined, guildId))],
+              allowedMentions: { parse: [] },
+            }).catch((error: unknown) => {
+              logger.warn({ err: error, channelId }, "Could not send Asia notice alert");
+              return null;
+            });
+            if (sent) {
+              saveMessage.run(notice.id, channelId, sent.id, new Date(expiresAt).toISOString());
             }
           }
         }
       }
-
-      seenNoticeIds = currentIds;
     } catch (error) {
       // An API failure is not evidence that any server went offline.
       logger.warn({ err: error }, "Asia status check failed; preserving last known data");
