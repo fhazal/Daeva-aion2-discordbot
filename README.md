@@ -181,6 +181,7 @@ Daeva reads public data from other services. If you run your own copy, please ke
 - **Aion2Timers feed:** used for Gartua timing, cached for 60 seconds.
 - **Server status:** read through axsddlr's aion2_api, once a minute.
 - **gaming.tools data and icons:** refreshed once a day and served from our own server.
+- **aion2.gg boss data:** the copy the aion2.gg team sends us, served to Daeva Meter from our own server; Daeva never scrapes aion2.gg.
 - **A2Tools boss list:** downloaded from GitHub once a day, read only by the bot.
 
 ---
@@ -190,6 +191,7 @@ Daeva reads public data from other services. If you run your own copy, please ke
 - **[kectx/aion2-discord-bot](https://github.com/kectx/aion2-discord-bot)** is the foundation Daeva grew from (MIT, licence kept in [`source/LICENSE`](source/LICENSE)).
 - **[axsddlr/aion2_api](https://github.com/axsddlr/aion2_api)** by Andre Saddler (MIT) powers the server-status data. The Docker build downloads it from upstream at a pinned commit and verifies its checksum. Thanks for fixing the missing-columns issue upstream!
 - **[AION 2 Global Database](https://aion2.gaming.tools/)** by the gaming.tools team supplies the monster and skill names and icons that Daeva mirrors for [Daeva Meter](https://github.com/fhazal/DAEVA-dps-meter) (`/api/gt`). Used with the kind permission of its admin, Thank you!
+- **Boss data: [aion2.gg](https://aion2.gg)**: boss enrage times and boss skill names, shared by the aion2.gg team for [Daeva Meter](https://github.com/fhazal/DAEVA-dps-meter) and served from `/api/aion2gg/`. The files themselves are not part of this repository.
 - **[A2Tools DPS Meter](https://github.com/taengu/A2Tools-DPS-Meter)** by taengu (GPL-3.0): its list of which monsters are bosses, including dungeon variants such as Conquest Vakron, decides which shared fights count on the DPS boards. Daeva downloads it once a day and only reads it; none of it is copied into this project or served from our site.
 - **[Aion2Timers](https://www.aion2timers.com)** provides the community-reported Gartua kill times behind the live Gartua estimate; `/gartua set` remains the manual fallback.
 - Daeva's own additions and changes are released under the [MIT licence](LICENSE).
