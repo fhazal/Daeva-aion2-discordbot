@@ -4,8 +4,8 @@ import { createLink, fightsBetween, getLink, removeLink, userForToken, useMeterD
 import { buildBoard } from "../src/services/meter-board.js";
 import { monthStart } from "../src/services/meter-month.js";
 import { ingestUpload } from "../src/services/meter-ingest.js";
-import { bossIdsFromA2Tools } from "../src/services/a2tools-bosses.js";
-import { BOSS_RANK, isBossOrElite, lookupRank, npcRanksFromDevalue, ranksFromDevalue } from "../src/services/npc-ranks.js";
+import { bossIdsFromA2Tools, dummyIdsFromA2Tools } from "../src/services/a2tools-bosses.js";
+import { BOSS_RANK, isBossOrElite, isDummyName, lookupRank, npcRanksFromDevalue, ranksFromDevalue } from "../src/services/npc-ranks.js";
 
 const NOW = Date.UTC(2026, 9, 19, 3, 0, 0);
 const RANKS: Record<number, string> = { 2400002: "Legendary", 2000002: "Heroic", 2100001: "Elite", 1000001: "Common" };
@@ -209,6 +209,14 @@ describe("npc ranks", () => {
     const src = `{"2300812":{"name":"Vakron","isBoss":true},"2100001":{"name":"Guard","isBoss":false},"2000000":{"name":"Punching Bag","isBoss":false,"isDummy":true}}`;
     expect([...bossIdsFromA2Tools(src)]).toEqual([2300812]);
     expect(bossIdsFromA2Tools("[]").size).toBe(0);
+  });
+
+  it("never treats a training scarecrow as a boss, though A2Tools flags it isBoss", () => {
+    const src = `{"2300229":{"name":"Training Scarecrow","isBoss":true,"isDummy":true},"2300812":{"name":"Vakron","isBoss":true}}`;
+    expect([...bossIdsFromA2Tools(src)]).toEqual([2300812]);
+    expect([...dummyIdsFromA2Tools(src)]).toEqual([2300229]);
+    expect(isDummyName("Melee Training Scarecrow")).toBe(true);
+    expect(isDummyName("Vakron")).toBe(false);
   });
 
   it("prefers gaming.tools, then the A2Tools boss list, then the name", () => {

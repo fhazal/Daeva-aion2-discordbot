@@ -1,7 +1,7 @@
 import { readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { logger } from "../lib/logger.js";
-import { a2ToolsIsBoss } from "./a2tools-bosses.js";
+import { a2ToolsIsBoss, a2ToolsIsDummy } from "./a2tools-bosses.js";
 import { mirrorDir } from "./gaming-tools-mirror.js";
 
 /**
@@ -66,8 +66,14 @@ export function lookupRank(ranks: NpcRanks, npcId: number, name?: string, a2Boss
   return ranks.byId.get(npcId) ?? (a2Boss ? BOSS_RANK : undefined) ?? (name ? ranks.byName.get(nameKey(name)) : undefined) ?? null;
 }
 
+/** Training scarecrows and punching bags never count, whatever rank a list gives them. */
+export function isDummyName(name?: string): boolean {
+  return !!name && /scarecrow|punching bag|training dummy/i.test(name);
+}
+
 /** The rank of a monster, or null when unknown or the data isn't mirrored yet. */
 export async function npcRank(npcId: number, name?: string): Promise<string | null> {
+  if (isDummyName(name) || (await a2ToolsIsDummy(npcId))) return null;
   const a2Boss = await a2ToolsIsBoss(npcId);
   const file = join(mirrorDir(), "npcs.d.json");
   try {

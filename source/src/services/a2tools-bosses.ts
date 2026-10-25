@@ -20,32 +20,56 @@ function file(): string {
   return join(dirname(process.env.DATABASE_PATH ?? "/state/bot.sqlite"), "a2tools", "npcs-en.json");
 }
 
-/** Npc ids marked `isBoss` in an A2Tools npc file. */
-export function bossIdsFromA2Tools(src: string): Set<number> {
+/** Npc ids with the given flag set in an A2Tools npc file. Dummies are never bosses: A2Tools flags Training Scarecrows as both. */
+function idsFlagged(src: string, flag: "isBoss" | "isDummy"): Set<number> {
   const data = JSON.parse(src) as unknown;
   const out = new Set<number>();
   if (!data || typeof data !== "object" || Array.isArray(data)) return out;
   for (const [key, v] of Object.entries(data as Record<string, unknown>)) {
     const id = Number(key);
-    if (Number.isInteger(id) && v && typeof v === "object" && (v as { isBoss?: unknown }).isBoss === true) out.add(id);
+    if (!Number.isInteger(id) || !v || typeof v !== "object") continue;
+    const o = v as { isBoss?: unknown; isDummy?: unknown };
+    if (o[flag] === true && (flag === "isDummy" || o.isDummy !== true)) out.add(id);
   }
   return out;
 }
 
-let cache: { mtimeMs: number; bosses: Set<number> } | null = null;
+/** Npc ids marked `isBoss` (and not `isDummy`) in an A2Tools npc file. */
+export function bossIdsFromA2Tools(src: string): Set<number> {
+  return idsFlagged(src, "isBoss");
+}
 
-/** Whether A2Tools lists this npc as a boss; null when the list isn't downloaded yet. */
-export async function a2ToolsIsBoss(npcId: number): Promise<boolean | null> {
+/** Npc ids marked `isDummy` (training scarecrows, punching bags, test monsters). */
+export function dummyIdsFromA2Tools(src: string): Set<number> {
+  return idsFlagged(src, "isDummy");
+}
+
+let cache: { mtimeMs: number; bosses: Set<number>; dummies: Set<number> } | null = null;
+
+async function load(): Promise<typeof cache> {
   try {
     const { mtimeMs } = await stat(file());
     if (!cache || cache.mtimeMs !== mtimeMs) {
-      cache = { mtimeMs, bosses: bossIdsFromA2Tools(await readFile(file(), "utf8")) };
-      logger.info({ bosses: cache.bosses.size }, "A2Tools boss list loaded for Daeva Meter fights");
+      const src = await readFile(file(), "utf8");
+      cache = { mtimeMs, bosses: bossIdsFromA2Tools(src), dummies: dummyIdsFromA2Tools(src) };
+      logger.info({ bosses: cache.bosses.size, dummies: cache.dummies.size }, "A2Tools boss list loaded for Daeva Meter fights");
     }
   } catch {
-    if (!cache) return null;
+    /* keep the last good list */
   }
-  return cache.bosses.has(npcId);
+  return cache;
+}
+
+/** Whether A2Tools lists this npc as a boss; null when the list isn't downloaded yet. */
+export async function a2ToolsIsBoss(npcId: number): Promise<boolean | null> {
+  const c = await load();
+  return c ? c.bosses.has(npcId) : null;
+}
+
+/** Whether A2Tools lists this npc as a dummy (training scarecrow, punching bag...). */
+export async function a2ToolsIsDummy(npcId: number): Promise<boolean> {
+  const c = await load();
+  return c ? c.dummies.has(npcId) : false;
 }
 
 async function refresh(): Promise<boolean> {
