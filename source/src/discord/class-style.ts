@@ -50,3 +50,20 @@ export function classEmoji(className: string | null | undefined): string {
 export function factionEmoji(faction: string | null | undefined): string {
   return (faction && FACTION_EMOJI[faction]) ?? "";
 }
+
+/** Round gold-on-navy number badges for ranks 4 to 10 (app emojis; the PNGs are in assets/rank-emoji). */
+const RANK_EMOJI: Record<number, string> = {
+  4: "<:DaevaRank4:1564029582711988365>",
+  5: "<:DaevaRank5:1564029584004087820>",
+  6: "<:DaevaRank6:1564029585937403944>",
+  7: "<:DaevaRank7:1564029587481038858>",
+  8: "<:DaevaRank8:1564029589171347517>",
+  9: "<:DaevaRank9:1564029591012515872>",
+  10: "<:DaevaRank10:1564029592954740779>",
+};
+
+/** The badge in front of a leaderboard row: a medal for the top three, a round number after that. */
+export function rankBadge(rank: number): string {
+  const medal = ["🥇", "🥈", "🥉"][rank - 1];
+  return medal ?? RANK_EMOJI[rank] ?? `\`${String(rank).padStart(2, " ")}\``;
+}
