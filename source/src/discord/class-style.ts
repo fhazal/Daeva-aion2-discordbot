@@ -1,30 +1,30 @@
 /**
- * Class colours (the same as Daeva Meter) and the bot's own app emojis for
+ * Class colours (matched to the class icons; the meter keeps its own) and the bot's own app emojis for
  * classes and factions, used on /profile cards.
  */
 
 export const CLASS_COLORS: Record<string, number> = {
-  gladiator: 0xc46b36,
-  templar: 0x4387d6,
-  assassin: 0xa86ce0,
-  ranger: 0x49a879,
-  sorcerer: 0xe56a3d,
-  elementalist: 0x43b7c7,
-  spiritmaster: 0x43b7c7,
-  cleric: 0xe6c65a,
-  chanter: 0xd985b5,
+  gladiator: 0x36c6dc,
+  templar: 0x4c88ee,
+  assassin: 0x4fd66b,
+  ranger: 0x2daf8c,
+  sorcerer: 0xa25cf0,
+  elementalist: 0xe04fc4,
+  spiritmaster: 0xe04fc4,
+  cleric: 0xf2d24a,
+  chanter: 0xee9f3a,
 };
 
 const CLASS_EMOJI: Record<string, string> = {
-  gladiator: "<:aion2gladiator:1561559976063930418>",
-  templar: "<:aion2templar:1561559967071473664>",
-  assassin: "<:aion2assasin:1561559152193576960>",
-  ranger: "<:aion2ranger:1561559974038216734>",
-  sorcerer: "<:aion2sorcerer:1561559972121153637>",
-  elementalist: "<:aion2elementalist:1561559970271723680>",
-  spiritmaster: "<:aion2elementalist:1561559970271723680>",
-  cleric: "<:aion2cleric:1561559977980600350>",
-  chanter: "<:aion2chanter:1561559149827850240>",
+  gladiator: "<:Gladiatorcyan:1563890021797208174>",
+  templar: "<:Templarblue:1563890028755816468>",
+  assassin: "<:Assassinemerald:1563890012884439141>",
+  ranger: "<:Rangergreen:1563890023743361044>",
+  sorcerer: "<:Sorcererpurple:1563890025618481213>",
+  elementalist: "<:Elementalistpink:1563890019251265636>",
+  spiritmaster: "<:Elementalistpink:1563890019251265636>",
+  cleric: "<:Clericyellow:1563890016697196695>",
+  chanter: "<:Chanteramber:1563890014549712946>",
 };
 
 const FACTION_EMOJI: Record<string, string> = {

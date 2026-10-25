@@ -289,14 +289,14 @@ svg.lu { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: roun
 .cb { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; flex: none; padding: 9px; color: var(--cc, var(--muted));
   background: color-mix(in srgb, var(--cc, var(--muted)) 16%, transparent); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--cc, var(--muted)) 55%, transparent); }
 .cb svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-[data-class="gladiator"] { --cc: #c46b36; }
-[data-class="templar"] { --cc: #4387d6; }
-[data-class="assassin"] { --cc: #a86ce0; }
-[data-class="ranger"] { --cc: #49a879; }
-[data-class="sorcerer"] { --cc: #e56a3d; }
-[data-class="elementalist"], [data-class="spiritmaster"] { --cc: #43b7c7; }
-[data-class="cleric"] { --cc: #e6c65a; }
-[data-class="chanter"] { --cc: #d985b5; }
+[data-class="gladiator"] { --cc: #36c6dc; }
+[data-class="templar"] { --cc: #4c88ee; }
+[data-class="assassin"] { --cc: #4fd66b; }
+[data-class="ranger"] { --cc: #2daf8c; }
+[data-class="sorcerer"] { --cc: #a25cf0; }
+[data-class="elementalist"], [data-class="spiritmaster"] { --cc: #e04fc4; }
+[data-class="cleric"] { --cc: #f2d24a; }
+[data-class="chanter"] { --cc: #ee9f3a; }
 .rn { min-width: 0; flex: 1; }
 .rn > b { display: block; font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rn > span { display: block; color: var(--muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

@@ -93,7 +93,7 @@
       const span = el("span", "cb em");
       span.dataset.class = key;
       const img = document.createElement("img");
-      img.src = `/emblems/${key}.png`;
+      img.src = `/class-icons/${key}.png`;
       img.alt = className;
       img.loading = "lazy";
       span.append(img);
@@ -638,7 +638,7 @@
     const em = el("span", "emb");
     if (EMBLEMS.has(key)) {
       const ei = document.createElement("img");
-      ei.src = `/emblems/${key}.png`;
+      ei.src = `/class-icons/${key}.png`;
       ei.alt = m.className;
       em.append(ei);
     } else {

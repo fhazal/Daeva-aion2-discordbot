@@ -4,6 +4,10 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.9.0 · 25 October 2026
+
+- **New class icons and colours:** the website and Discord (profile cards, legion roster, daily DPS posts) now use the coloured class icons, with embed and bar colours matched to each icon. Daeva Meter keeps its own look for now.
+
 ## 1.8.3 · 25 October 2026
 
 - **Training Scarecrows no longer count on the DPS boards:** training scarecrows, punching bags and other dummies are ignored, and the ones already recorded were removed from the daily recap and boards.
