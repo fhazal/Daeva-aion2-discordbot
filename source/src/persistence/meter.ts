@@ -78,6 +78,8 @@ function init(d: Database.Database): void {
   // 0.3.7 meters prove a fight complete (HP check): keep that per fight.
   const cols = new Set((d.prepare("PRAGMA table_info(meter_fights)").all() as Array<{ name: string }>).map((c) => c.name));
   if (!cols.has("verified")) d.exec("ALTER TABLE meter_fights ADD COLUMN verified INTEGER NOT NULL DEFAULT 0");
+  // Training scarecrows and punching bags were counted as bosses before v1.8.3.
+  d.exec("DELETE FROM meter_fights WHERE lower(target) LIKE '%scarecrow%' OR lower(target) LIKE '%punching bag%' OR lower(target) LIKE '%training dummy%'");
 }
 
 /** For tests: use another database (e.g. in-memory). */
