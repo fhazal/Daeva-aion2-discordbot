@@ -4,6 +4,10 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.8.3 · 25 October 2026
+
+- **Training Scarecrows no longer count on the DPS boards:** training scarecrows, punching bags and other dummies are ignored, and the ones already recorded were removed from the daily recap and boards.
+
 ## 1.8.2 · 25 October 2026
 
 - **Daeva Meter release posts:** the footer now says the meter updates itself when you start it (0.5.2 and newer); only 0.5.1 or older needs the new installer.
