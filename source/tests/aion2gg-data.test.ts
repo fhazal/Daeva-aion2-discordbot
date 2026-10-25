@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { etagMatches, readAion2gg } from "../src/services/aion2gg-data.js";
+import { etagMatches, readAion2gg, readSkillIcon, readSkillIconList } from "../src/services/aion2gg-data.js";
 
 describe("aion2.gg boss data for Daeva Meter", () => {
   const root = mkdtempSync(join(tmpdir(), "daeva-gg-"));
@@ -36,5 +36,22 @@ describe("aion2.gg If-None-Match", () => {
     expect(etagMatches("*", tag)).toBe(true);
     expect(etagMatches('"other"', tag)).toBe(false);
     expect(etagMatches(undefined, tag)).toBe(false);
+  });
+});
+
+describe("skill icons for Daeva Meter", () => {
+  it("lists only <id>.webp files and serves them, nothing outside the folder", async () => {
+    const root = mkdtempSync(join(tmpdir(), "daeva-icons-"));
+    process.env.DATABASE_PATH = join(root, "bot.sqlite");
+    expect(JSON.parse((await readSkillIconList()).body.toString())).toEqual({});
+    mkdirSync(join(root, "aion2gg", "skill-icons"), { recursive: true });
+    writeFileSync(join(root, "aion2gg", "skill-icons", "3000020.webp"), "RIFF");
+    writeFileSync(join(root, "aion2gg", "skill-icons", "notes.txt"), "x");
+    const list = await readSkillIconList();
+    expect(JSON.parse(list.body.toString())).toEqual({ "3000020": "3000020.webp" });
+    expect(list.etag).toMatch(/^"[0-9a-f]{16}"$/);
+    expect((await readSkillIcon("3000020.webp"))?.toString()).toBe("RIFF");
+    expect(await readSkillIcon("../bot.sqlite")).toBeNull();
+    expect(await readSkillIcon("notes.txt")).toBeNull();
   });
 });

@@ -7,7 +7,7 @@
  * Never scrape aion2.gg: their Terms forbid it, only use what the admin gives.
  */
 import { createHash } from "node:crypto";
-import { readFile, stat } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 export const AION2GG_FILES = ["boss-fights.json", "boss-skills.json"] as const;
@@ -44,6 +44,41 @@ export async function readAion2gg(file: string): Promise<{ body: Buffer; etag: s
     const fresh = { mtimeMs: s.mtimeMs, size: s.size, body, etag };
     cache.set(file, fresh);
     return fresh;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Skill icons the meter shows where gaming.tools has none (Theostones,
+ * Shackling Arrow…), dropped into `state/aion2gg/skill-icons/` as
+ * `<skill id>.webp`. Adding one needs no restart.
+ */
+export function skillIconsDir(): string {
+  return join(aion2ggDir(), "skill-icons");
+}
+
+const ICON_FILE = /^(\d{1,10})\.webp$/;
+
+/** The list of skill icons we have, as {"<skill id>": "<file>"}, with an ETag. */
+export async function readSkillIconList(): Promise<{ body: Buffer; etag: string }> {
+  let files: string[] = [];
+  try {
+    files = (await readdir(skillIconsDir())).filter((f) => ICON_FILE.test(f)).sort();
+  } catch {
+    // No folder yet: an empty list.
+  }
+  const list = Object.fromEntries(files.map((f) => [f.replace(ICON_FILE, "$1"), f]));
+  const body = Buffer.from(JSON.stringify(list));
+  const etag = `"${createHash("sha1").update(body).digest("hex").slice(0, 16)}"`;
+  return { body, etag };
+}
+
+/** One skill icon by file name (`<skill id>.webp`), or null. */
+export async function readSkillIcon(file: string): Promise<Buffer | null> {
+  if (!ICON_FILE.test(file)) return null;
+  try {
+    return await readFile(join(skillIconsDir(), file));
   } catch {
     return null;
   }

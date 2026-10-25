@@ -10,7 +10,7 @@ import { getPortrait, isPortraitId } from "../services/portraits.js";
 import { getGartuaStore } from "../persistence/store.js";
 import { getCachedLiveGartuaEstimate } from "../services/live-gartua.js";
 import { readMirrored, readMirroredImage } from "../services/gaming-tools-mirror.js";
-import { etagMatches, readAion2gg } from "../services/aion2gg-data.js";
+import { etagMatches, readAion2gg, readSkillIcon, readSkillIconList } from "../services/aion2gg-data.js";
 import { userForToken } from "../persistence/meter.js";
 import { dpsMonthJson, dpsTodayJson } from "../services/meter-daily.js";
 import { allowUpload, ingestUpload } from "../services/meter-ingest.js";
@@ -456,6 +456,29 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
       return;
     }
     send(res, 200, "application/json; charset=utf-8", body, head, "public, max-age=3600");
+    return;
+  }
+
+  if (url.pathname === "/api/aion2gg/skill-icons.json") {
+    // Which skills have an icon of ours (where gaming.tools has none).
+    const list = await readSkillIconList();
+    if (etagMatches(req.headers["if-none-match"], list.etag)) {
+      res.writeHead(304, { ...SECURITY_HEADERS, ETag: list.etag, "Cache-Control": "public, max-age=3600" });
+      res.end();
+      return;
+    }
+    res.setHeader("ETag", list.etag);
+    send(res, 200, "application/json; charset=utf-8", list.body, head, "public, max-age=3600");
+    return;
+  }
+
+  if (url.pathname.startsWith("/api/aion2gg/skill-icons/")) {
+    const body = await readSkillIcon(url.pathname.slice("/api/aion2gg/skill-icons/".length));
+    if (!body) {
+      send(res, 404, "text/plain; charset=utf-8", "Not found", head, "no-store");
+      return;
+    }
+    send(res, 200, "image/webp", body, head, "public, max-age=604800");
     return;
   }
 
