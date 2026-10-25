@@ -19,6 +19,16 @@ export function aion2ggDir(): string {
 type Cached = { mtimeMs: number; size: number; body: Buffer; etag: string };
 const cache = new Map<string, Cached>();
 
+/**
+ * If-None-Match matches our ETag. Cloudflare turns the ETag weak (W/"…") when
+ * it compresses the reply, and the meter sends that back; a list or * counts too.
+ */
+export function etagMatches(header: string | string[] | undefined, etag: string): boolean {
+  if (!header) return false;
+  const tags = (Array.isArray(header) ? header.join(",") : header).split(",").map((t) => t.trim().replace(/^W\//, ""));
+  return tags.includes("*") || tags.includes(etag);
+}
+
 /** A served file with its ETag, or null when it isn't there (or isn't valid JSON). */
 export async function readAion2gg(file: string): Promise<{ body: Buffer; etag: string } | null> {
   if (!(AION2GG_FILES as readonly string[]).includes(file)) return null;

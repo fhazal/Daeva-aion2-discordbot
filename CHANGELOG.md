@@ -4,6 +4,11 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.8.1 · 25 October 2026
+
+- **Daeva Meter pictures for 0.5.3:** the website's meter section and the release posts show the 0.5.3 meter, and the Solo layout is no longer cut off on the right.
+- **Daily boss data check for meters:** `/api/aion2gg/` now answers "unchanged" when the meter sends back the weak ETag (`W/"…"`) Cloudflare hands out, so meters don't download the same files every day.
+
 ## 1.8.0 · 26 October 2026
 
 - **Boss enrage times for Daeva Meter:** the site serves aion2.gg's boss data (enrage times and boss skill names, *Boss data: aion2.gg*) at `/api/aion2gg/`, from the copy their team sends after each game patch. Meters 0.5.3 and newer download it once a day for their Frenzy countdown.

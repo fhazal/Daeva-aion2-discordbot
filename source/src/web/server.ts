@@ -10,7 +10,7 @@ import { getPortrait, isPortraitId } from "../services/portraits.js";
 import { getGartuaStore } from "../persistence/store.js";
 import { getCachedLiveGartuaEstimate } from "../services/live-gartua.js";
 import { readMirrored, readMirroredImage } from "../services/gaming-tools-mirror.js";
-import { readAion2gg } from "../services/aion2gg-data.js";
+import { etagMatches, readAion2gg } from "../services/aion2gg-data.js";
 import { userForToken } from "../persistence/meter.js";
 import { dpsMonthJson, dpsTodayJson } from "../services/meter-daily.js";
 import { allowUpload, ingestUpload } from "../services/meter-ingest.js";
@@ -466,7 +466,7 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
       sendJson(res, 404, JSON.stringify({ error: "Not available" }), head);
       return;
     }
-    if (req.headers["if-none-match"] === file.etag) {
+    if (etagMatches(req.headers["if-none-match"], file.etag)) {
       res.writeHead(304, { ...SECURITY_HEADERS, ETag: file.etag, "Cache-Control": "public, max-age=3600" });
       res.end();
       return;

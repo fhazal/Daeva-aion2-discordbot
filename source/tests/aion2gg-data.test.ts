@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { readAion2gg } from "../src/services/aion2gg-data.js";
+import { etagMatches, readAion2gg } from "../src/services/aion2gg-data.js";
 
 describe("aion2.gg boss data for Daeva Meter", () => {
   const root = mkdtempSync(join(tmpdir(), "daeva-gg-"));
@@ -24,5 +24,17 @@ describe("aion2.gg boss data for Daeva Meter", () => {
     expect(await readAion2gg("boss-skills.json")).toBeNull();
     writeFileSync(join(root, "aion2gg", "boss-skills.json"), '{"1000860": "Att');
     expect(await readAion2gg("boss-skills.json")).toBeNull();
+  });
+});
+
+describe("aion2.gg If-None-Match", () => {
+  it("accepts the weak form Cloudflare hands out, lists and *", () => {
+    const tag = '"0123456789abcdef"';
+    expect(etagMatches(tag, tag)).toBe(true);
+    expect(etagMatches(`W/${tag}`, tag)).toBe(true);
+    expect(etagMatches(`"other", W/${tag}`, tag)).toBe(true);
+    expect(etagMatches("*", tag)).toBe(true);
+    expect(etagMatches('"other"', tag)).toBe(false);
+    expect(etagMatches(undefined, tag)).toBe(false);
   });
 });
