@@ -63,7 +63,7 @@ export function releaseMessage(rel: Release, h: Highlights, roleId: string | nul
     .setURL(rel.url)
     .setThumbnail(METER_ICON)
     .setImage(`${METER_SHOT}?v=${version}`) // fresh copy per release; Discord caches by URL
-    .setFooter(daevaFooter("Already installed? The meter offers the update · run the new installer over the old one", undefined, guildId))
+    .setFooter(daevaFooter("Already installed? It updates itself when you start it · 0.5.1 or older: run the new installer", undefined, guildId))
     .setTimestamp(new Date(rel.publishedAt));
   if (h.tagline) embed.setDescription(h.tagline);
   if (h.added.length) embed.addFields({ name: "🆕 What's new", value: clip(h.added.join("\n")) });

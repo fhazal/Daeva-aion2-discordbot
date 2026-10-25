@@ -4,6 +4,10 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.8.2 · 25 October 2026
+
+- **Daeva Meter release posts:** the footer now says the meter updates itself when you start it (0.5.2 and newer); only 0.5.1 or older needs the new installer.
+
 ## 1.8.1 · 25 October 2026
 
 - **Daeva Meter pictures for 0.5.3:** the website's meter section and the release posts show the 0.5.3 meter, and the Solo layout is no longer cut off on the right.
