@@ -79,12 +79,17 @@ export function topHeading(count: number): string {
   return count === 1 ? "Top player" : `Top ${count}`;
 }
 
+const INDENT = "⠀".repeat(5);
+
 /** The recap embed, or null when nobody shared a fight today. */
 export function recapEmbed(board: DpsBoard, guildId?: string | null): EmbedBuilder | null {
   if (board.fights === 0 || board.top.length === 0) return null;
+  // Each player is one block (name line, target line) with a blank line between blocks. The target is
+  // indented with Braille blanks, which Discord doesn't trim, so it reads as belonging to the row above.
   const lines = board.top.map(
-    (p, i) => `${rankBadge(i + 1)} ${classEmoji(p.className)} **${p.name}**${p.verified ? " ✅" : ""} · **${shortNumber(p.dps)}** DPS
--# ${p.target}`,
+    (p, i) =>
+      `${rankBadge(i + 1)} ${classEmoji(p.className)} **${p.name}**${p.verified ? " ✅" : ""} · **${shortNumber(p.dps)}** DPS
+-# ${INDENT}↳ ${p.target}`,
   );
   const day = new Intl.DateTimeFormat("en-GB", { timeZone: RECAP_TZ, weekday: "long", day: "numeric", month: "long" }).format(
     new Date(Date.parse(board.endsAt) - 60_000),
@@ -94,7 +99,7 @@ export function recapEmbed(board: DpsBoard, guildId?: string | null): EmbedBuild
   const embed = new EmbedBuilder()
     .setColor(strongest ? classColor(strongest.className, 0xe8b04b) : 0xe8b04b)
     .setAuthor({ name: "Daeva Meter · Aion 2 · Daily DPS Recap", iconURL: AION2_ICON, url: SITE })
-    .setDescription([`-# 🗓️ ${day} · since ${reset} reset`, "", `### 🏆 ${topHeading(lines.length)}`, ...lines].join("\n"))
+    .setDescription([`-# 🗓️ ${day} · since ${reset} reset`, `### 🏆 ${topHeading(lines.length)}`, lines.join("\n\n")].join("\n"))
     .setFooter(
       daevaFooter(`${board.top.some((p) => p.verified) ? "✅ every hit counted · " : ""}⚔️ ${board.fights} boss and elite fights · 👥 ${board.players} players · Link your meter with /meter link`, undefined, guildId),
     )

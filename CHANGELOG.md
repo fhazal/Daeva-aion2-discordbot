@@ -4,6 +4,10 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.11.2 · 27 October 2026
+
+- **Clearer daily DPS recap:** each player is its own block with the boss indented under the name and a blank line between players, and the heading sits right under the date.
+
 ## 1.11.1 · 26 October 2026
 
 - **Daeva Meter 0.5.4 pictures:** the website and the Discord release post show the meter's new look (new title, class icons, numbers with a capital K).
