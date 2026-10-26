@@ -4,6 +4,10 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.11.1 · 26 October 2026
+
+- **Daeva Meter 0.5.4 pictures:** the website and the Discord release post show the meter's new look (new title, class icons, numbers with a capital K).
+
 ## 1.11.0 · 26 October 2026
 
 - **New look for the daily DPS recap:** the card is titled "Daeva Meter · Aion 2 · Daily DPS Recap", ranks 4 to 10 get round gold-on-navy number badges (ranks 1 to 3 keep their medals), the target sits on a small line under each player, and "Top 10" is a proper heading.
