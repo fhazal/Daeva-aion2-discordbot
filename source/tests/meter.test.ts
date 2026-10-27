@@ -5,7 +5,7 @@ import { buildBoard } from "../src/services/meter-board.js";
 import { monthStart } from "../src/services/meter-month.js";
 import { ingestUpload } from "../src/services/meter-ingest.js";
 import { bossIdsFromA2Tools, dummyIdsFromA2Tools } from "../src/services/a2tools-bosses.js";
-import { BOSS_RANK, isBossOrElite, isDummyName, lookupRank, npcRanksFromDevalue, ranksFromDevalue } from "../src/services/npc-ranks.js";
+import { BOSS_RANK, isBossOrElite, isBossRank, isDummyName, lookupRank, npcRanksFromDevalue, ranksFromDevalue } from "../src/services/npc-ranks.js";
 
 const NOW = Date.UTC(2026, 9, 19, 3, 0, 0);
 const RANKS: Record<number, string> = { 2400002: "Legendary", 2000002: "Heroic", 2100001: "Elite", 1000001: "Common" };
@@ -178,6 +178,14 @@ describe("buildBoard", () => {
     expect(board.players).toBe(3);
     expect(board.fights).toBe(4);
   });
+
+  it("counts only boss kills", () => {
+    const f = (character: string, dps: number, rank: string | null, bossKilled = true) => ({ character, className: "Gladiator", dps, duration: 30, target: "X", rank, bossKilled, verified: false, startedAt: NOW });
+    const board = buildBoard([f("A", 60_000, "Elite"), f("A", 20_000, "Heroic"), f("B", 90_000, "Boss", false), f("C", 15_000, "Boss"), f("D", 99_000, "normalcitizen")], 0, 1, "2026-10-19");
+    expect(board.top.map((t) => [t.name, t.dps])).toEqual([["A", 20_000], ["C", 15_000]]);
+    expect(board.fights).toBe(2);
+    expect(board.players).toBe(2);
+  });
 });
 
 describe("npc ranks", () => {
@@ -188,6 +196,11 @@ describe("npc ranks", () => {
     expect(isBossOrElite("Elite")).toBe(true);
     expect(isBossOrElite("Common")).toBe(false);
     expect(isBossOrElite(null)).toBe(false);
+    // Townspeople, crafting tables, portals and platforms aren't fights.
+    for (const r of ["normalcitizen", "object", "Abyss Portal", "vessel"]) expect(isBossOrElite(r)).toBe(false);
+    expect(isBossRank("HeroicMonster")).toBe(true);
+    expect(isBossRank(BOSS_RANK)).toBe(true);
+    expect(isBossRank("Elite")).toBe(false);
   });
 
   // Vakron (Heroic) is listed; "Guard" is both a Common and an Elite monster.

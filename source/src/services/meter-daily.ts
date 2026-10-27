@@ -81,6 +81,12 @@ export function topHeading(count: number): string {
 
 const INDENT = "⠀".repeat(5);
 
+/** 65 → "1:05". */
+function mmss(sec: number): string {
+  const s = Math.round(sec);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+
 /** The recap embed, or null when nobody shared a fight today. */
 export function recapEmbed(board: DpsBoard, guildId?: string | null): EmbedBuilder | null {
   if (board.fights === 0 || board.top.length === 0) return null;
@@ -89,7 +95,7 @@ export function recapEmbed(board: DpsBoard, guildId?: string | null): EmbedBuild
   const lines = board.top.map(
     (p, i) =>
       `${rankBadge(i + 1)} ${classEmoji(p.className)} **${p.name}**${p.verified ? " ✅" : ""} · **${shortNumber(p.dps)}** DPS
--# ${INDENT}↳ ${p.target}`,
+-# ${INDENT}↳ ${p.target} · ${mmss(p.duration)}`,
   );
   const day = new Intl.DateTimeFormat("en-GB", { timeZone: RECAP_TZ, weekday: "long", day: "numeric", month: "long" }).format(
     new Date(Date.parse(board.endsAt) - 60_000),
@@ -99,15 +105,15 @@ export function recapEmbed(board: DpsBoard, guildId?: string | null): EmbedBuild
   const embed = new EmbedBuilder()
     .setColor(strongest ? classColor(strongest.className, 0xe8b04b) : 0xe8b04b)
     .setAuthor({ name: "Daeva Meter · Aion 2 · Daily DPS Recap", iconURL: AION2_ICON, url: SITE })
-    .setDescription([`-# 🗓️ ${day} · since ${reset} reset`, `### 🏆 ${topHeading(lines.length)}`, lines.join("\n\n")].join("\n"))
+    .setDescription([`-# 🗓️ ${day} · since ${reset} reset`, "-# ⚔️ Bosses only · Boss killed", `### 🏆 ${topHeading(lines.length)}`, lines.join("\n\n")].join("\n"))
     .setFooter(
-      daevaFooter(`${board.top.some((p) => p.verified) ? "✅ every hit counted · " : ""}⚔️ ${board.fights} boss and elite fights · 👥 ${board.players} players · Link your meter with /meter link`, undefined, guildId),
+      daevaFooter(`${board.top.some((p) => p.verified) ? "✅ every hit counted · " : ""}⚔️ ${board.fights} boss ${board.fights === 1 ? "kill" : "kills"} · 👥 ${board.players} players · Link your meter with /meter link`, undefined, guildId),
     )
     .setTimestamp(new Date(board.endsAt));
   if (strongest) {
     embed.addFields({
       name: "Strongest class",
-      value: `${classEmoji(strongest.className)} **${strongest.className}** · ${shortNumber(strongest.average)} average · best ${shortNumber(strongest.best)} (${strongest.fights} fights)`,
+      value: `${classEmoji(strongest.className)} **${strongest.className}** · ${shortNumber(strongest.average)} average · best ${shortNumber(strongest.best)} (${strongest.fights} ${strongest.fights === 1 ? "kill" : "kills"})`,
     });
   }
   return embed;

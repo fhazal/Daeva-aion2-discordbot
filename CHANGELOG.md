@@ -4,6 +4,11 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.12.0 · 27 October 2026
+
+- **DPS boards count boss kills only:** the daily Discord recap and the website's Top DPS and Class DPS cards now count only bosses (dungeon and field bosses) that died. Elites like Thieves Cannon no longer top the list. The recap shows each fight's time and says "Bosses only · Boss killed".
+- **Fix:** townspeople, crafting tables, portals and platforms were treated as elite fights. They no longer count.
+
 ## 1.11.2 · 27 October 2026
 
 - **Clearer daily DPS recap:** each player is its own block with the boss indented under the name and a blank line between players, and the heading sits right under the date.

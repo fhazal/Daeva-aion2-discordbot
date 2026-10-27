@@ -1,4 +1,5 @@
 import type { StoredFight } from "../persistence/meter.js";
+import { isBossRank } from "./npc-ranks.js";
 
 /** The day's DPS boards, as served by /api/dps-today and posted in the recap. */
 export type DpsBoard = {
@@ -22,8 +23,9 @@ export type DpsBoard = {
 
 export const TOP_SIZE = 10;
 
-/** Builds the boards from one day's fights. */
-export function buildBoard(fights: StoredFight[], startsAt: number, endsAt: number, day: string): DpsBoard {
+/** Builds the boards from one day's fights. Only boss kills count. */
+export function buildBoard(all: StoredFight[], startsAt: number, endsAt: number, day: string): DpsBoard {
+  const fights = all.filter((f) => f.bossKilled && isBossRank(f.rank));
   const best = new Map<string, StoredFight>();
   for (const f of fights) {
     const key = f.character.toLowerCase();

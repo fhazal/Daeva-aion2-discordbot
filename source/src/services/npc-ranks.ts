@@ -91,10 +91,23 @@ export async function npcRank(npcId: number, name?: string): Promise<string | nu
   return cache ? lookupRank(cache, npcId, name, a2Boss) : null;
 }
 
-/** Boss and elite ranks count for the DPS boards; Common and unknown don't. */
+/** Boss ranks: dungeon and field bosses (Heroic), the A2Tools boss list (Boss) and above. */
+const BOSS_RANKS = new Set(["heroic", "boss", "legendary", "legend"]);
+
+function rankKey(rank: string | null): string {
+  return (rank ?? "").toLowerCase().replace(/monster$/, "").replace(/[^a-z]/g, "");
+}
+
+/** Only bosses count on the DPS boards. */
+export function isBossRank(rank: string | null): boolean {
+  return BOSS_RANKS.has(rankKey(rank));
+}
+
+/**
+ * Boss and elite fights are kept (they link a member's character); anything
+ * else isn't: Common, townspeople ("normalcitizen"), crafting tables
+ * ("object"), portals, platforms ("vessel") and unknown monsters.
+ */
 export function isBossOrElite(rank: string | null): boolean {
-  if (!rank) return false;
-  const r = rank.toLowerCase().replace(/monster$/, "").replace(/[^a-z]/g, "");
-  if (!r || r === "common" || r === "normal") return false;
-  return true;
+  return rankKey(rank) === "elite" || isBossRank(rank);
 }

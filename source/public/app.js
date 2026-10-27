@@ -728,7 +728,7 @@
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const b = await res.json();
       dps.since.textContent = `since ${new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long" }).format(new Date(b.startsAt))}`;
-      dps.count.textContent = b.fights === 1 ? "1 fight" : `${b.fights} fights`;
+      dps.count.textContent = b.fights === 1 ? "1 kill" : `${b.fights} kills`;
 
       // Few players so far: show how to join underneath, so the card stays full.
       dps.list.hidden = b.top.length === 0;
@@ -768,7 +768,7 @@
         bar.append(avg);
         if (c.fights) bar.append(best);
         const num = el("div", "num2");
-        num.append(el("b", null, c.fights ? shortNum(c.average) : "–"), el("span", null, c.fights === 1 ? "1 fight" : `${c.fights} fights`));
+        num.append(el("b", null, c.fights ? shortNum(c.average) : "–"), el("span", null, c.fights === 1 ? "1 kill" : `${c.fights} kills`));
         row.append(classBadge(c.className), el("span", "nm", c.className), bar, num);
         return row;
       }));
