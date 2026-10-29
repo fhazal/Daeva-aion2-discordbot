@@ -3,7 +3,7 @@
  * Bump it with each release (new features: 1.4.0, fixes only: 1.3.1), in
  * step with package.json and CHANGELOG.md; a test checks they agree.
  */
-export const DAEVA_VERSION = "1.12.2";
+export const DAEVA_VERSION = "1.12.3";
 export const DAEVA_NAME = `Daeva v${DAEVA_VERSION}`;
 
 /** The maker's mark, at the end of every card's footer. */
