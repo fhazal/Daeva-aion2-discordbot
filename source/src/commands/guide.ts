@@ -15,7 +15,7 @@ import { logger } from "../lib/logger.js";
 const HUB_URL = "https://daevaos.com/guides/class-guide-hub";
 
 const SHEET_URL =
-  "https://docs.google.com/spreadsheets/u/0/d/1lbHaVairHaz26M8XGNF9CBWqiiHHBM6CylTwNKnlOug/htmlview?gid=1832734703&pru=AAABoRycTJg*&pli=1#gid=1832734703";
+  "https://docs.google.com/spreadsheets/u/0/d/1lbHaVairHaz26M8XGNF9CBWqiiHHBM6CylTwNKnlOug/htmlview?gid=173362228#gid=173362228";
 
 const CLASS_GUIDES: Record<
   string,
@@ -23,48 +23,48 @@ const CLASS_GUIDES: Record<
 > = {
   gladiator: {
     name: "Gladiator",
-    url: "https://daevaos.com/guides/gladiator-quick-reference",
-    note: "Gladiator quick reference",
+    url: "https://daevaos.com/guides/gladiator-class-guide-pve",
+    note: "Gladiator class guide",
   },
   templar: {
     name: "Templar",
-    url: "https://daevaos.com/guides/templar-quick-reference",
-    note: "Templar quick reference",
+    url: "https://daevaos.com/guides/templar-class-guide-pve",
+    note: "Templar class guide",
   },
   assassin: {
     name: "Assassin",
-    url: "https://daevaos.com/guides/assassin-quick-reference",
-    note: "Assassin quick reference",
+    url: "https://daevaos.com/guides/assassin-class-guide-pve",
+    note: "Assassin class guide",
   },
   ranger: {
     name: "Ranger",
-    url: "https://daevaos.com/guides/ranger-quick-reference",
-    note: "Ranger quick reference",
+    url: "https://daevaos.com/guides/ranger-class-guide",
+    note: "Ranger class guide",
   },
   sorcerer: {
     name: "Sorcerer",
-    url: "https://daevaos.com/guides/sorcerer-quick-reference",
-    note: "Sorcerer quick reference",
+    url: "https://daevaos.com/guides/sorcerer-class-guide-pve",
+    note: "Sorcerer class guide",
   },
   spiritmaster: {
     name: "Spiritmaster",
-    url: "https://daevaos.com/guides/spiritmaster-quick-reference",
-    note: "Spiritmaster quick reference",
+    url: "https://daevaos.com/guides/spirit-master-class-guide-pve",
+    note: "Spiritmaster class guide",
   },
   cleric: {
     name: "Cleric",
-    url: "https://daevaos.com/guides/cleric-quick-reference",
-    note: "Cleric quick reference",
+    url: "https://daevaos.com/guides/cleric-class-guide-2",
+    note: "Cleric class guide",
   },
   chanter: {
     name: "Chanter",
     url: "https://daevaos.com/guides/chanter-quick-guide",
-    note: "Chanter quick guide",
+    note: "Chanter class guide",
   },
   brawler: {
     name: "Brawler",
     url: HUB_URL,
-    note: "No dedicated Brawler quick-reference link was found; open the hub for available resources",
+    note: "No Brawler class guide was found; open the hub for available resources",
   },
 };
 
@@ -125,7 +125,7 @@ const guideCommand: Command = {
         .setURL(HUB_URL)
         .setDescription(
           "Find class guides, quick references, builds and community resources.\n\n" +
-            "Use `/guide class` to open the quick guide for a specific class.",
+            "Use `/guide class` to open the guide for a specific class.",
         )
         .setFooter(daevaFooter("Community Guides", undefined, interaction.guildId));
 
@@ -160,16 +160,16 @@ const guideCommand: Command = {
 
       const embed = new EmbedBuilder()
         .setColor(0x5865f2)
-        .setTitle(`AION 2 • ${guide.name} Quick Guide`)
+        .setTitle(`AION 2 • ${guide.name} Class Guide`)
         .setDescription(
           `${guide.note}.\n\n` +
             "Open the linked page for the class reference. Check the page for updates before using a build.",
         )
-        .setFooter(daevaFooter("Quick Guides", undefined, interaction.guildId));
+        .setFooter(daevaFooter("Class Guides", undefined, interaction.guildId));
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
-          .setLabel("Open Quick Guide")
+          .setLabel("Open Class Guide")
           .setStyle(ButtonStyle.Link)
           .setURL(guide.url),
         new ButtonBuilder()

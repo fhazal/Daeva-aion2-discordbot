@@ -4,6 +4,10 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.12.5 · 30 October 2026
+
+- **New class guide links:** `/guide class` now opens the full DaevaOS class guides (PvE) instead of the old quick references, and the guide spreadsheet button opens its Class Guides tab.
+
 ## 1.12.4 · 29 October 2026
 
 - **Daeva Meter 0.5.7 pictures** on the website and in the Discord release post.
