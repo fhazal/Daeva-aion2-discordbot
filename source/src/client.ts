@@ -22,6 +22,7 @@ import { getAlertStore, getPanelStore } from "./persistence/store.js";
 import { startAlertScheduler } from "./services/alert-scheduler.js";
 import { startNextCleanup } from "./services/next-cleanup.js";
 import { startSteamNews } from "./services/steam-news.js";
+import { startPairingsWatch } from "./services/pairings-watch.js";
 import { startGamePing } from "./services/game-ping.js";
 import { startPanelUpdater } from "./services/panel-updater.js";
 import { startAsiaStatusMonitor } from "./services/asia-status.js";
@@ -64,6 +65,7 @@ export async function createClient(): Promise<{
       stopAlerts: startAlertScheduler(client),
       stopNextCleanup: startNextCleanup(client),
       stopSteamNews: startSteamNews(client),
+      stopPairingsWatch: startPairingsWatch(client),
       stopGamePing: startGamePing(),
       stopServers: startAsiaStatusMonitor(client),
       stopServerStatusCleanup: startServerStatusCleanup(client),

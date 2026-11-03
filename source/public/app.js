@@ -854,11 +854,14 @@
       const i = p[mode].findIndex((pair) => pair.includes(sel));
       return i < 0 ? null : { n: i + 1, other: p[mode][i][0] === sel ? p[mode][i][1] : p[mode][i][0] };
     };
-    const side = (s) => {
-      const b = el("span", "pr-s");
+    // Servers sit on the row's outer edges with the VS in the middle; the
+    // right side is mirrored (tag, name, emblem) so its emblem ends the row.
+    const side = (s, right) => {
+      const b = el("span", right ? "pr-s r" : "pr-s");
       if (s === sel) b.dataset.me = "";
-      b.append(factionImg(p.factions[s]), el("span", null, s));
-      if (s.toLowerCase() === HOME_SERVER) b.append(el("span", "tag", "Our server"));
+      const parts = [factionImg(p.factions[s]), el("span", null, s)];
+      if (s.toLowerCase() === HOME_SERVER) parts.push(el("span", "tag", "Our server"));
+      b.append(...(right ? parts.reverse() : parts));
       return b;
     };
     pairs.mine.replaceChildren(...[["abyss", "Abyss"], ["rift", "Spacetime Rift"]].map(([mode, label]) => {
@@ -874,7 +877,11 @@
       pairs[mode].replaceChildren(...p[mode].map(([a, b], i) => {
         const row = el("div", "pr");
         if (a === sel || b === sel) row.dataset.on = "";
-        row.append(el("span", "n", String(i + 1)), side(a), el("span", "x", "VS"), side(b));
+        row.dataset.fa = p.factions[a];
+        row.dataset.fb = p.factions[b];
+        const left = el("span", "pr-a");
+        left.append(el("span", "n", String(i + 1)), side(a));
+        row.append(left, el("span", "x", "VS"), side(b, true));
         return row;
       }));
     }

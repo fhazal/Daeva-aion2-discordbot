@@ -1,7 +1,14 @@
-import { EmbedBuilder } from "discord.js";
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder,
+  type MessageCreateOptions,
+} from "discord.js";
 import { factionEmoji } from "../class-style.js";
 import { daevaFooter } from "../../version.js";
 import {
+  changedPairs,
   getPairings,
   opponentOf,
   type Pairings,
@@ -9,7 +16,9 @@ import {
 } from "../../services/pairings.js";
 
 const GOLD = 0xe8b04b;
+const AMBER = 0xf0b232;
 const FOOTER = "Pairings: NCSOFT";
+const SITE_PAIRINGS = "https://aion2.bajubesi.org/#pairings";
 
 /** "28 Oct" from "2026-10-28". */
 function sinceLabel(data: Pairings): string {
@@ -87,4 +96,63 @@ export function panelPairsField(home: string, data: Pairings = getPairings()): {
     value: `Abyss: ${line("abyss")}\nRift: ${line("rift")}\n_since ${sinceLabel(data)}_ · [notice](${data.notice.url})`,
     inline: true,
   };
+}
+
+function noticeButton(label: string, url: string): ButtonBuilder {
+  return new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel(label).setEmoji("📰").setURL(url);
+}
+
+/** Posted in the news channel once, when the bot switches to a new notice's pairings. */
+export function newPairingsMessage(prev: Pairings, next: Pairings, home: string, guildId?: string | null): MessageCreateOptions {
+  const modeField = (mode: PairingMode, label: string) => {
+    const now = opponentOf(home, mode, next);
+    const before = opponentOf(home, mode, prev);
+    const was = before && before.server !== now?.server ? `\n~~was ${before.server}~~` : now ? "\nunchanged" : "";
+    return {
+      name: `${home} · ${label}`,
+      value: (now ? `vs ${server(now.server, next, true)}` : "not paired") + was,
+      inline: true,
+    };
+  };
+  const embed = new EmbedBuilder()
+    .setColor(GOLD)
+    .setTitle("⚔️ New server pairings")
+    .setDescription(
+      `NCSOFT changed the ${next.region} pairings on **${sinceLabel(next)}**. ` +
+      "Daeva now uses them on the panel, in `/server pairs` and on the website.",
+    )
+    .setFooter(daevaFooter(FOOTER, undefined, guildId))
+    .setTimestamp(new Date());
+  if (next.factions[home]) embed.addFields(modeField("abyss", "Abyss"), modeField("rift", "Spacetime Rift"));
+  embed.addFields({
+    name: "​",
+    value:
+      `${changedPairs(prev, next, "abyss")} of ${next.abyss.length} Abyss pairs and ` +
+      `${changedPairs(prev, next, "rift")} of ${next.rift.length} Rift pairs changed in ${next.region}. ` +
+      "See them all with `/server pairs`.",
+  });
+  const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    noticeButton("Official notice", next.notice.url),
+    new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel("All pairings").setEmoji("🌐").setURL(SITE_PAIRINGS),
+  );
+  return { embeds: [embed], components: [buttons], allowedMentions: { parse: [] } };
+}
+
+/** DM to the bot owner when a new matchmaking notice can't be read. */
+export function pairingsFailedMessage(
+  notice: { title: string; url: string },
+  reason: string,
+  current: Pairings,
+): MessageCreateOptions {
+  const embed = new EmbedBuilder()
+    .setColor(AMBER)
+    .setTitle("⚠️ New pairings notice, couldn't read it")
+    .setDescription(
+      `“${notice.title}”\nReason: **${reason.slice(0, 300)}**\n\n` +
+      `Still using the ${sinceLabel(current)} pairings. Fix the notice reader or update \`pairings.json\` by hand.`,
+    )
+    .setFooter(daevaFooter())
+    .setTimestamp(new Date());
+  const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(noticeButton("Open notice", notice.url));
+  return { embeds: [embed], components: [buttons], allowedMentions: { parse: [] } };
 }

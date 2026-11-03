@@ -523,8 +523,8 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
   }
 
   if (url.pathname === "/api/pairings") {
-    // Fixed until the next deploy (data/pairings.json), so browsers may cache it.
-    send(res, 200, "application/json; charset=utf-8", pairingsJson(), head, "public, max-age=3600");
+    // Changes only when NCSOFT posts new pairings (services/pairings-watch.ts).
+    send(res, 200, "application/json; charset=utf-8", pairingsJson(), head, "public, max-age=300");
     return;
   }
 
