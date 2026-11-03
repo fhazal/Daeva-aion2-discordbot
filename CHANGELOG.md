@@ -4,6 +4,10 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.14.1 · 4 November 2026
+
+- **Daeva Meter 0.6.2 pictures** on the website and in the Discord release post.
+
 ## 1.14.0 · 3 November 2026
 
 - **Pairings update themselves:** Daeva checks NCSOFT's notice board every 15 minutes. When a new Server Matchmaking notice appears, it reads the Asia tables, switches the panel, `/server pairs` and the website to the new pairings, and posts a "New server pairings" card in the news channel. If a notice can't be read, the old pairings stay and the bot owner gets a DM.
