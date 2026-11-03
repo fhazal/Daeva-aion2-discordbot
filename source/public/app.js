@@ -827,6 +827,90 @@
     if (document.visibilityState === "visible") load();
   });
 
+  /* Server pairings ----------------------------------------------------------- */
+
+  const pairs = {
+    pick: $("pairs-pick"),
+    sub: $("pairs-sub"),
+    mine: $("pairs-mine"),
+    abyss: $("pairs-abyss"),
+    rift: $("pairs-rift"),
+    empty: $("pairs-empty"),
+    source: $("pairs-source"),
+  };
+
+  function factionImg(faction) {
+    const img = document.createElement("img");
+    img.className = "fe";
+    img.dataset.f = faction;
+    img.src = `/emblems/${faction.toLowerCase()}.png`;
+    img.alt = faction;
+    return img;
+  }
+
+  function renderPairings(p) {
+    const sel = pairs.pick.value;
+    const meet = (mode) => {
+      const i = p[mode].findIndex((pair) => pair.includes(sel));
+      return i < 0 ? null : { n: i + 1, other: p[mode][i][0] === sel ? p[mode][i][1] : p[mode][i][0] };
+    };
+    const side = (s) => {
+      const b = el("span", "pr-s");
+      if (s === sel) b.dataset.me = "";
+      b.append(factionImg(p.factions[s]), el("span", null, s));
+      if (s.toLowerCase() === HOME_SERVER) b.append(el("span", "tag", "Our server"));
+      return b;
+    };
+    pairs.mine.replaceChildren(...[["abyss", "Abyss"], ["rift", "Spacetime Rift"]].map(([mode, label]) => {
+      const m = meet(mode);
+      const box = el("div");
+      const v = el("span", "v");
+      if (m) v.append(factionImg(p.factions[sel]), el("span", null, sel), el("span", "vs", "vs"), factionImg(p.factions[m.other]), el("span", null, m.other));
+      else v.append(el("span", null, "Not paired"));
+      box.append(el("span", "k", label), v, el("span", "pn", m ? `Pair ${m.n}` : ""));
+      return box;
+    }));
+    for (const mode of ["abyss", "rift"]) {
+      pairs[mode].replaceChildren(...p[mode].map(([a, b], i) => {
+        const row = el("div", "pr");
+        if (a === sel || b === sel) row.dataset.on = "";
+        row.append(el("span", "n", String(i + 1)), side(a), el("span", "x", "VS"), side(b));
+        return row;
+      }));
+    }
+  }
+
+  async function loadPairings() {
+    try {
+      const res = await fetch("/api/pairings");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const p = await res.json();
+      const names = Object.keys(p.factions);
+      const home = names.find((s) => s.toLowerCase() === HOME_SERVER) || names[0];
+      pairs.pick.replaceChildren(...["Elyos", "Asmodian"].map((f) => {
+        const group = document.createElement("optgroup");
+        group.label = f === "Elyos" ? "Elyos" : "Asmodians";
+        group.append(...names.filter((s) => p.factions[s] === f).sort().map((s) => {
+          const o = document.createElement("option");
+          o.textContent = s;
+          o.selected = s === home;
+          return o;
+        }));
+        return group;
+      }));
+      const since = new Date(`${p.since}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+      pairs.sub.textContent = `${p.region} · pairings since ${since} · NCSOFT changes them now and then`;
+      const link = outLink(`“${p.notice.title}” ↗`, p.notice.url, "NCSOFT's server matchmaking notice");
+      pairs.source.replaceChildren("Source: NCSOFT, ", link);
+      pairs.pick.onchange = () => renderPairings(p);
+      renderPairings(p);
+    } catch {
+      pairs.empty.hidden = false;
+      pairs.mine.hidden = true;
+      pairs.abyss.parentElement.parentElement.hidden = true;
+    }
+  }
+
   // The maker's mark shows on copies of this site hosted anywhere else.
   if (location.hostname !== "aion2.bajubesi.org") $("made").hidden = false;
   setInterval(tick, 1_000);
@@ -835,4 +919,5 @@
   setInterval(loadRoster, ROSTER_REFRESH_MS);
   loadDps();
   setInterval(loadDps, DPS_REFRESH_MS);
+  loadPairings();
 })();

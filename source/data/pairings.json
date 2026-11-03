@@ -1,0 +1,54 @@
+{
+  "region": "Asia",
+  "since": "2026-10-28",
+  "notice": {
+    "title": "Server Matchmaking | October 28",
+    "url": "https://aion2.plaync.com/en-us/board/notice/view?articleId=6ae00a2f6276ae76f3e4a59d"
+  },
+  "factions": {
+    "Siel": "Elyos",
+    "Nezekan": "Elyos",
+    "Vaizel": "Elyos",
+    "Kaisinel": "Elyos",
+    "Yustiel": "Elyos",
+    "Ariel": "Elyos",
+    "Fregion": "Elyos",
+    "Meslamtaeda": "Elyos",
+    "Hithanya": "Elyos",
+    "Nania": "Elyos",
+    "Zikel": "Asmodian",
+    "Triniel": "Asmodian",
+    "Beritra": "Asmodian",
+    "Hadala": "Asmodian",
+    "Lumiel": "Asmodian",
+    "Israphel": "Asmodian",
+    "Azphel": "Asmodian",
+    "Nemon": "Asmodian",
+    "Marchutan": "Asmodian",
+    "Ereshkigal": "Asmodian"
+  },
+  "abyss": [
+    ["Siel", "Zikel"],
+    ["Nezekan", "Triniel"],
+    ["Vaizel", "Beritra"],
+    ["Kaisinel", "Hadala"],
+    ["Yustiel", "Lumiel"],
+    ["Ariel", "Israphel"],
+    ["Fregion", "Azphel"],
+    ["Meslamtaeda", "Nemon"],
+    ["Hithanya", "Nania"],
+    ["Marchutan", "Ereshkigal"]
+  ],
+  "rift": [
+    ["Siel", "Zikel"],
+    ["Nezekan", "Israphel"],
+    ["Vaizel", "Lumiel"],
+    ["Ariel", "Triniel"],
+    ["Kaisinel", "Azphel"],
+    ["Yustiel", "Ereshkigal"],
+    ["Fregion", "Marchutan"],
+    ["Meslamtaeda", "Nemon"],
+    ["Nania", "Beritra"],
+    ["Hithanya", "Hadala"]
+  ]
+}

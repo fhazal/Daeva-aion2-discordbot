@@ -38,6 +38,7 @@ export const HELP: HelpSection[] = [
     title: "🖥️ Server",
     items: [
       { cmd: "server", sub: "status", text: "Asia server status" },
+      { cmd: "server", sub: "pairs", text: "Abyss and Rift server pairings" },
       { cmd: "ping", text: "Bot response time" },
     ],
   },

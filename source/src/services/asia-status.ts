@@ -133,7 +133,7 @@ export function chunkFieldLines(lines: string[], max = 1024): string[] {
 }
 
 /** The server this bot is run for. Read lazily so a Docker env_file always wins. */
-function homeServerName(): string {
+export function homeServerName(): string {
   return process.env.HOME_SERVER_NAME?.trim() || "Beritra";
 }
 

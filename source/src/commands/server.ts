@@ -5,6 +5,9 @@ import {
   getAsiaStatus,
 } from "../services/asia-status.js";
 import { getDatabase } from "../persistence/db.js";
+import { homeServerName } from "../services/asia-status.js";
+import { findPairingServer, pairingServers } from "../services/pairings.js";
+import { buildPairingsEmbed, buildServerPairEmbed } from "../discord/embeds/pairings-embed.js";
 
 const serverCommand: Command = {
   data: new SlashCommandBuilder()
@@ -12,9 +15,33 @@ const serverCommand: Command = {
     .setDescription("AION 2 server monitoring")
     .addSubcommand((sub) =>
       sub.setName("status").setDescription("Show the Asia server monitoring panel"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("pairs")
+        .setDescription("Abyss and Spacetime Rift server pairings")
+        .addStringOption((opt) =>
+          opt
+            .setName("server")
+            .setDescription("Show who one server meets")
+            .addChoices(...pairingServers().map((name) => ({ name, value: name }))),
+        ),
     ),
 
   async execute(interaction) {
+    if (interaction.options.getSubcommand() === "pairs") {
+      const picked = interaction.options.getString("server");
+      const target = picked ? findPairingServer(picked) : null;
+      const home = findPairingServer(homeServerName()) ?? homeServerName();
+      await interaction.reply({
+        embeds: [target
+          ? buildServerPairEmbed(target, interaction.guildId)
+          : buildPairingsEmbed(home, interaction.guildId)],
+        allowedMentions: { parse: [] },
+      });
+      return;
+    }
+
     await interaction.deferReply();
 
     try {

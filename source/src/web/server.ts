@@ -16,6 +16,7 @@ import { dpsMonthJson, dpsTodayJson } from "../services/meter-daily.js";
 import { allowUpload, ingestUpload } from "../services/meter-ingest.js";
 import { npcRank } from "../services/npc-ranks.js";
 import { resolveProbeTarget } from "../services/asia-status.js";
+import { pairingsJson } from "../services/pairings.js";
 
 /**
  * Daeva web — read-only timers site for aion2.bajubesi.org.
@@ -518,6 +519,12 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
       return;
     }
     send(res, 200, img.type, img.body, head, "public, max-age=86400");
+    return;
+  }
+
+  if (url.pathname === "/api/pairings") {
+    // Fixed until the next deploy (data/pairings.json), so browsers may cache it.
+    send(res, 200, "application/json; charset=utf-8", pairingsJson(), head, "public, max-age=3600");
     return;
   }
 

@@ -1,5 +1,7 @@
 import { getGamePing } from "../../services/game-ping.js";
-import { creationLockIcon } from "../../services/asia-status.js";
+import { creationLockIcon, homeServerName } from "../../services/asia-status.js";
+import { findPairingServer } from "../../services/pairings.js";
+import { panelPairsField } from "./pairings-embed.js";
 import { EmbedBuilder, time, TimestampStyles } from "discord.js";
 import type { EventOccurrence, Region } from "../../core/types.js";
 import { getScheduleDisclaimer } from "../../core/schedule-engine.js";
@@ -202,11 +204,11 @@ export function buildTimerEmbed(params: {
         })(),
         inline: true,
       },
-      {
-        name: "🔄 PANEL REFRESH",
-        value: `<t:${Math.floor((Date.now() + 60_000) / 1000)}:R>\nRefreshes every 60 seconds`,
-        inline: true,
-      },
+      ...(() => {
+        // Who our server meets in the Abyss and the Rift (data/pairings.json).
+        const field = panelPairsField(findPairingServer(homeServerName()) ?? homeServerName());
+        return field ? [field] : [];
+      })(),
     )
     
     .setFooter(daevaFooter("Event Timers", undefined, params.guildId))

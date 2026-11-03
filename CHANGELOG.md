@@ -4,6 +4,12 @@ Daeva, the AION 2 Discord bot behind aion2.bajubesi.org. Versions follow
 the footer on every card: new features raise the middle number (1.4.0),
 fixes only raise the last (1.3.1).
 
+## 1.13.0 · 3 November 2026
+
+- **Server pairings:** new `/server pairs` shows who each Asia server meets in the Abyss and the Spacetime Rift, from NCSOFT's matchmaking notice. Add `server:` to see one server.
+- **Timer panel:** the refresh countdown is replaced by Beritra's Abyss and Rift opponents.
+- **Website:** new Server pairings card. Pick a server to highlight its two pairs.
+
 ## 1.12.9 · 3 November 2026
 
 - **Daeva Meter 0.6.1 pictures** on the website and in the Discord release post.
